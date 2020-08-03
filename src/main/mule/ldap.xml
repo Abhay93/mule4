@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:ldap="http://www.mulesoft.org/schema/mule/ldap"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ldap http://www.mulesoft.org/schema/mule/ldap/current/mule-ldap.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="ldapLookupFlow" doc:id="5d3400e5-4729-41c9-a52e-314cb6b46f75" >
+		<http:listener doc:name="Listener" doc:id="a025b170-250f-42ac-a3dd-12e651858444" config-ref="HTTP_Listener_config:8081" path="/lookup"/>
+		<ldap:lookup doc:name="Lookup" doc:id="14aece9b-0ddc-4e43-907d-50b1d063ec67" config-ref="LDAP_Configuration" dn="ou=Muleys,o=Mule" structuralObjectClass="inetOrgPerson"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b9f7f822-c54b-48e8-ac02-924505dd75c7" message="#[payload]"/>
+	</flow>
+	<flow name="addEntryFlow" doc:id="40081457-f1ec-4cae-8d02-b8b3202a51b1" >
+		<http:listener doc:name="Listener" doc:id="1c96a27d-c28f-428e-9ff7-1f5d26b5871d" config-ref="HTTP_Listener_config:8081" path="/add"/>
+		<ldap:add doc:name="Add entry" doc:id="91dd05c6-4072-4ad8-abe3-5331c2c99ad7" config-ref="LDAP_Configuration">
+			<ldap:entry ><![CDATA[#[{
+	dn : "employeeNumber=21,ou=Muleys,o=Mule",
+	cn : "Test User2",
+	sn : "User2",
+	userid: "1",
+	objectclass : ["top", "person", "organizationalPerson", "inetOrgPerson"]
+}]]]></ldap:entry>
+		</ldap:add>
+		<logger level="INFO" doc:name="Logger" doc:id="73c02b15-6777-470c-b219-f2c22a59b01d" message="#[payload]"/>
+	</flow>
+	<flow name="ldapDeleteFlow" doc:id="ec25143e-c27c-43a8-8f50-c165bf7e1f5a" >
+		<http:listener doc:name="Listener" doc:id="da3631ab-1165-4d6a-bb5e-78431f83eab9" config-ref="HTTP_Listener_config:8081" path="/ldapdel"/>
+		<ldap:delete doc:name="Delete entry" doc:id="b379f837-7f44-4242-97c3-6b09369eefa4" config-ref="LDAP_Configuration" dn="cn=cloudAdminTesT3,ou=Admin,o=Mule"/>
+		<logger level="INFO" doc:name="Logger" doc:id="cca80d56-ce24-48cb-9c5a-eb7351d996c5" message="#[payload]"/>
+	</flow>
+	<flow name="addMVAFlow" doc:id="f3df967c-9712-4648-8ae9-3d142177c650" >
+		<http:listener doc:name="Listener" doc:id="4e684032-0109-4516-ad5c-a0465319aacc" config-ref="HTTP_Listener_config:8081" path="/addmva"/>
+		<ldap:add-multi-value-attribute doc:name="Add multi value attribute" doc:id="b755a299-908c-45d1-a46c-62ae44a4bacb" config-ref="LDAP_Configuration" dn="employeeNumber=21,ou=Muleys,o=Mule" attributeName="userid">
+			<ldap:attribute-values ><![CDATA[#[[1]]]]></ldap:attribute-values>
+		</ldap:add-multi-value-attribute>
+		<logger level="INFO" doc:name="Logger" doc:id="b09f3a97-1e07-4dc7-9859-5b65e8a16cbc" message="#[payload]"/>
+	</flow>
+	<flow name="ldapFlow" doc:id="bd118b71-2d87-48aa-b4f9-32b24aaa89e6" >
+		<http:listener doc:name="Listener" doc:id="7b0814d6-c914-45cc-a704-af8cb1109f7a" config-ref="HTTP_Listener_config:8081" path="/exists"/>
+		<ldap:exists doc:name="Exists" doc:id="2be75512-8713-417d-9fa0-dbc18ebfe406" config-ref="LDAP_Configuration" dn="cn=cloudAdminTesT3,ou=Admin,o=Mule"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2278cce2-96cb-4b26-95b2-a493eadad183" message="#[payload]"/>
+	</flow>
+</mule>

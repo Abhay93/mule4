@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<flow name="storeDefaultFlow" doc:id="bd8f259e-72ad-449a-b52a-bd4a983dff38" >
+		<http:listener doc:name="Listener" doc:id="eb62cdaa-107c-478f-bce6-35a7b21855cb" config-ref="HTTP_Listener_config:8081" path="/store"/>
+		<os:store doc:name="Store" doc:id="e7ac1e4e-0fcc-4430-a749-c8cf03550b01" key="#[payload.id]" objectStore="Object_store">
+			<os:value ><![CDATA[#[payload.name]]]></os:value>
+		</os:store>
+		<logger level="INFO" doc:name="Logger" doc:id="a1bccfb3-27f6-4805-8087-ee532a0452e3" message="#[payload]" category="STORE"/>
+	</flow>
+	<flow name="retrieveFlow" doc:id="8fe448a9-3289-4bc2-92f0-6c1995137a5e" >
+		<http:listener doc:name="Listener" doc:id="edd0678a-b08d-476a-bf4e-741159a5b409" config-ref="HTTP_Listener_config:8081" path="/retrieve"/>
+		<os:retrieve doc:name="Retrieve" doc:id="bd3879b7-2380-4f9e-98be-560addef2db8" key="#[attributes.queryParams.id]" objectStore="Object_store">
+		</os:retrieve>
+		<logger level="INFO" doc:name="Logger" doc:id="37aaad80-84e2-4399-9acd-6b0f43a37b68" message="#[payload]" category="RETRIEVE"/>
+	</flow>
+	<flow name="retrieveAllDefaultFlow" doc:id="c155083f-ff7c-4738-bad9-263fb565d465">
+		<http:listener doc:name="Listener" doc:id="cb0286a7-0e1c-4976-9284-4ae48525472e" config-ref="HTTP_Listener_config:8081" path="/retrieveAllDef"/>
+		<os:retrieve-all doc:name="Retrieve all" doc:id="b74dbcb4-a5cd-4671-8348-559be822faf4" objectStore="Object_store"/>
+		<logger level="INFO" doc:name="Logger" doc:id="03f4183d-b090-43b6-a233-e40d479bf291" message="#[payload]" category="RETRIEVE ALL"/>
+	</flow>
+	<flow name="retrieveAllKeysFlow" doc:id="fe946f04-5504-4cd8-a320-c6482d90453d" >
+		<http:listener doc:name="Listener" doc:id="775e652d-6bc6-4a1c-8f67-f34a2848be97" config-ref="HTTP_Listener_config:8081" path="/rak"/>
+		<os:retrieve-all-keys doc:name="Retrieve all keys" doc:id="7fcf8f7e-5f77-4527-9d09-f9b19fa7adc7" objectStore="Object_store"/>
+		<logger level="INFO" doc:name="Logger" doc:id="de042760-aeb5-44aa-9dec-fa14beed81b1" message="#[payload]" category="RAK"/>
+	</flow>
+	<flow name="containsFlow" doc:id="8440cde7-eca5-4bf1-9f20-72c162071718" >
+		<http:listener doc:name="Listener" doc:id="d797f495-2354-4179-9d76-50db2439dd58" config-ref="HTTP_Listener_config:8081" path="/contains"/>
+		<os:contains doc:name="Contains" doc:id="e95731ec-3cf1-4960-be3b-5cc4a84133a6" key="#[attributes.queryParams.id]" objectStore="Object_store"/>
+		<logger level="INFO" doc:name="Logger" doc:id="830e066d-245e-4797-a2f4-c74e48ad1c6d" message="#[payload]" category="CONTAINS"/>
+	</flow>
+	<flow name="removeFlow" doc:id="cda7d93b-7da8-4278-90e7-07aaeca956b5" >
+		<http:listener doc:name="Listener" doc:id="414c9456-0d15-473c-ab18-bb4ed1de8f48" config-ref="HTTP_Listener_config:8081" path="/remove"/>
+		<os:remove doc:name="Remove" doc:id="94249500-aa63-4279-86c2-395e99c98977" key="#[attributes.queryParams.id]" objectStore="Object_store"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c698a6ce-fd7b-4566-8168-c1c2fe2c83fd" message="#[payload]" category="REMOVE"/>
+	</flow>
+	<flow name="clearFlow" doc:id="7058ebab-0ec8-40a3-8ad9-8ef8e5aaf52d" >
+		<http:listener doc:name="Listener" doc:id="40d53736-61ff-483f-b54c-969c5032845d" config-ref="HTTP_Listener_config:8081" path="clear"/>
+		<os:clear doc:name="Clear" doc:id="4ae2040c-f929-40e9-a08b-62835e0af3a4" objectStore="Object_store"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f2dc0405-6817-4424-ba6d-7e698e33e5c0" message="#[payload]" category="CLEAR"/>
+	</flow>
+</mule>

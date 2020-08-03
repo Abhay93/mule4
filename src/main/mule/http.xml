@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<import file="choice.xml" />
+	<flow name="toFlow" doc:id="b1a5b2d9-6946-452d-b689-27ddef7bd8f3">
+		<http:listener doc:name="Listener"
+			doc:id="17189956-91a8-4c36-8021-db7e8817874d" config-ref="HTTP_Listener_config:8081"
+			path="/http/{id}">
+			<http:response statusCode="201" reasonPhrase="success">
+				<http:body><![CDATA[#["call success"]]]></http:body>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	version : "mule4"
+}]]]></http:headers>
+			</http:response>
+			<http:error-response>
+				<http:body><![CDATA[#[output text/plain --- "Failed"]]]></http:body>
+				<http:headers><![CDATA[#[output application/java
+---
+{
+	Reason : "Error Demo"
+}]]]></http:headers>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="6f6f9e1e-a6a8-42bd-aaef-421b47dc71eb" message="#[Id: attributes.uriParams.id]" />
+		<choice doc:name="Choice" doc:id="3273c7c9-2d78-43d0-9b67-a71ff362932f">
+			<when expression="#[attributes.queryParams.'name' == &quot;Abhay&quot;]">
+				<logger level="INFO" doc:name="Logger"
+					doc:id="f3d1a1af-837f-4cc8-9df3-56949ee199e5" message="${secure::version}" />
+			</when>
+			<otherwise>
+				<set-payload value='#[{"name":"Abhay" }]' doc:name="Set Payload"
+					doc:id="ffee864c-eafb-4c7f-9b15-9e6c817d7604" mimeType="application/json" />
+			</otherwise>
+		</choice>
+		<http:request method="GET" doc:name="Request"
+			doc:id="a09a3756-5bcb-420f-8dae-59bf6a5fac84" config-ref="HTTP_Request_configuration"
+			path="/test/{id}" target="responseData">
+			<http:body><![CDATA[#["This string"]]]></http:body>
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	version : "MULE4"
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"id" : 1
+}]]]></http:uri-params>
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	name : "John"
+}]]]></http:query-params>
+			<http:response-validator >
+				<http:success-status-code-validator values="200 .. 400" />
+			</http:response-validator>
+
+		
+</http:request>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="1c38a1e6-fcb8-47f0-a4aa-37ef4b01d002" message="ASD" />
+	</flow>
+	<flow name="toFlow1" doc:id="2e336690-d5c6-4497-95dc-a0f1bdf4a0de">
+		<http:listener doc:name="Listener"
+			doc:id="75b3803c-c367-47a6-a4d5-a857c8f88d79" config-ref="HTTP_Listener_config:8082"
+			path="/test/{id}" >
+			<http:response statusCode="400" />
+		</http:listener>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="56ce29b4-85a7-4544-b2df-44e45ea94e80" message="#[Id: attributes.uriParams.id]" />
+		<set-payload value="payload" doc:name="Set Payload"
+			doc:id="15864492-e207-42c0-9b9f-d71e7e04e551" />
+	</flow>
+</mule>

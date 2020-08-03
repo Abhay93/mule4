@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:oauth="http://www.mulesoft.org/schema/mule/oauth" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
+	xsi:schemaLocation="
+        http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+        http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+        http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/oauth http://www.mulesoft.org/schema/mule/oauth/current/mule-oauth.xsd
+ http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
+       
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+
+<!-- 	 <spring:config name="springConfig" files="common-config-beans.xml"/> -->
+
+    <os:object-store name="clientObjectStore" config-ref="clientObjectStore_Config"/>
+    <os:object-store name="tokenObjectStore"
+                     config-ref="tokenObjectStore_Config" entryTtl="${secure::token.ttl}"/>
+
+    
+    <spring:security-manager>
+        <spring:delegate-security-provider name="clientSecurityProvider"
+                                           delegate-ref="clientAuthenticationManager"/>
+                                            </spring:security-manager>
+                                            <spring:security-manager>
+      <spring:delegate-security-provider name="resourceOwnerSecurityProvider"
+                                           delegate-ref="resourceOwnerAuthenticationManager"/>
+                                           </spring:security-manager>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="e0a1d776-9b8a-4cbe-a1cb-5364484eb7fc" file="oauth-2.0-${env}.yaml" key="${secure.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<os:config name="tokenObjectStore_Config" doc:name="ObjectStore Config" doc:id="44b31f88-ca0b-4f6c-b35f-1242fb2d7555" />
+	<os:config name="clientObjectStore_Config" doc:name="ObjectStore Config" doc:id="bdc33eac-6397-467b-8394-e20435b61711" />
+   
+<http:listener-config name="listenerConfig">
+		<http:listener-connection host="0.0.0.0"
+			port="${secure::https.private.port}" protocol="HTTPS">
+			<tls:context>
+				<tls:key-store type="jks" path="${secure::keystore.path}"
+					keyPassword="${secure::keystore.keypassword}" password="${secure::keystore.password}" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+
+	<oauth2-provider:config name="OAuth2Provider"
+		providerName="${secure::oauth.provider.name}"
+		resourceOwnerSecurityProvider="resourceOwnerSecurityProvider"
+		clientSecurityProvider="clientSecurityProvider" supportedGrantTypes="${secure::allSupportedGrantTypes}"
+		listenerConfig="listenerConfig" clientStore="clientObjectStore">
+		<oauth2-provider:token-config path="${secure::token.path}"
+			tokenStore="tokenObjectStore" tokenTtl="${secure::token.ttl}">
+			<oauth2-provider:refresh-token-strategy>
+				<oauth2-provider:multiple-refresh-tokens />
+			</oauth2-provider:refresh-token-strategy>
+		</oauth2-provider:token-config>
+	</oauth2-provider:config>
+
+	<flow name="protected-resource-flow">
+		<http:listener path="${secure::oauth.validation.path}"
+			config-ref="listenerConfig" allowedMethods="GET" />
+		<logger level="DEBUG" doc:name="Logger"
+			doc:id="ad4c1c2c-edee-4574-a887-ae03b27bd770" message="Inside Validation Flow" />
+		<oauth2-provider:validate-token
+			config-ref="OAuth2Provider" doc:id="eaba4945-e252-4dbc-acd1-1da08db9e5db"
+			accessToken="#[(attributes.headers['authorization'] splitBy ' ')[1]]" />
+
+		<logger level="DEBUG" doc:name="Logger"
+			doc:id="52d19abd-6093-4dc4-afcb-e438308f5249" message="Validation Complete" />
+		<error-handler ref="oauthErrorHandler" />
+	</flow>
+	<flow name="registerClientsFlow" doc:id="b30ee73e-617f-44c1-a0a6-13cb3fd9e8eb">
+		<http:listener doc:name="Listener"
+			doc:id="4ba6e0a8-125a-41dd-aae5-b2f6c832a254" config-ref="listenerConfig"
+			path="${secure::oauth.register.path}" allowedMethods="POST"
+			outputMimeType="application/json">
+			<http:response statusCode="#[201]" />
+			<http:error-response statusCode="#[vars.httpStatus]">
+				<http:body><![CDATA[#[output application/json --- payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+
+		<logger level="INFO" doc:name="Logger"
+			doc:id="a3c46272-5531-4d81-a440-ebea9f224689" message='#["Inside Create Client"]' />
+		<choice doc:name="Choice" doc:id="19972d78-c0d3-4340-bc01-be00734a0c67">
+			<when
+				expression="#[attributes.headers.'oauthproviderpassword'== p('secure::oauth.provider.password')]">
+				<oauth2-provider:create-client
+					doc:name="Create client" doc:id="f1e203f4-b64e-477d-96bc-aefd59d702a0"
+					config-ref="OAuth2Provider" clientId="#[payload.client_id]" type="CONFIDENTIAL"
+					secret="#[payload.client_secret]" clientName="#[payload.client_name]"
+					description="create new client" authorizedGrantTypes="#[payload.grant_type]"
+					scopes="#[payload.scope]" failIfPresent="false" />
+				<logger level="DEBUG" doc:name="Logger"
+					doc:id="cbc02723-f9ee-4b21-ae27-9232fedd1d01" message="After Create Client" />
+				<set-payload doc:name="Set Payload"
+					doc:id="25af55dd-a9e4-419f-b5a7-d637ad4c67e7"
+					value='#[%dw 2.0
+output application/json
+---
+{
+	message: "Client Registration Successful!"
+}]'
+					mimeType="application/json" />
+				<logger level="DEBUG" doc:name="Logger"
+					doc:id="a32711f3-04ae-483d-971b-5eae3be5d2b2" message="Client Created Successfully" />
+			</when>
+			<otherwise>
+				<logger level="DEBUG" doc:name="Logger"
+					doc:id="6d74c401-32f9-4345-8fa0-fb8d05de2906"
+					message="Not allowed to Register client------- Wrong/No password provided" />
+				<raise-error doc:name="Raise error"
+					doc:id="8bcd2c33-8303-4382-ae2c-0d725832ac45" type="CLIENT_SECURITY:UNAUTHORIZED"
+					description="Access to Register Client is restricted. Please provide valid Oauth provider password" />
+			</otherwise>
+		</choice>
+		<error-handler ref="oauthErrorHandler" />
+	</flow>
+	<flow name="unregisterClientsFlow" doc:id="7f04a256-6590-41f9-a823-f995cf496065">
+		<http:listener doc:name="Listener"
+			doc:id="c0c3244b-8e92-4c7a-bbb0-5a29b3d10670" config-ref="listenerConfig"
+			path="${secure::oauth.unregister.path}" allowedMethods="DELETE"
+			outputMimeType="application/json">
+			<http:response statusCode="#[200]" />
+			<http:error-response statusCode="#[vars.httpStatus]">
+				<http:body><![CDATA[#[output application/json --- payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="DEBUG" doc:name="Logger"
+			doc:id="7627d99f-9c79-44ff-ab7c-e3f7cb7b221a" message="Inside Delete Client" />
+		<choice doc:name="Choice" doc:id="cb576c06-5fa4-437c-b925-c467aa291f90">
+			<when
+				expression="#[attributes.headers.'oauthproviderpassword'== p('secure::oauth.provider.password')]">
+				<oauth2-provider:delete-client
+					doc:name="Delete client" doc:id="bb50dbde-4455-4289-af82-fdf81498edde"
+					config-ref="OAuth2Provider" clientId="#[attributes.headers.client_id]" />
+				<set-payload doc:name="Set Payload"
+					doc:id="bd232710-e29c-4c31-8e35-e326d3a3b6c9"
+					value='#[%dw 2.0
+output application/json
+---
+{
+	message: "Client Unregistered Successfully"
+}]'
+					mimeType="application/json" />
+				<logger level="DEBUG" doc:name="Logger"
+					doc:id="5fc5cec4-0418-458c-be52-77e19f15c448" message="Unregistered Client" />
+			</when>
+			<otherwise>
+				<logger level="DEBUG" doc:name="Logger"
+					doc:id="7ca88e98-5198-4fdf-a4c0-9c8f1c155ff6"
+					message="Not allowed to Unregister client------- Wrong/No password provided" />
+				<raise-error doc:name="Raise error"
+					doc:id="5f72fa36-cb91-421f-8254-81ce83dacea8" type="CLIENT_SECURITY:UNAUTHORIZED"
+					description="Access to Unregister Client is restricted. Please provide valid Oauth provider password" />
+			</otherwise>
+		</choice>
+		<error-handler ref="oauthErrorHandler" />
+	</flow>
+	<flow name="getClientsFlow" doc:id="39d49322-7ba6-412b-a0ba-093ed70816bc">
+		<http:listener doc:name="Listener"
+			doc:id="9032cb9f-5310-4644-bd0a-34b1c1982c1d" config-ref="listenerConfig"
+			path="${secure::oauth.getclients.path}" allowedMethods="GET"
+			outputMimeType="application/json">
+			<http:response statusCode="#[200]" />
+			<http:error-response statusCode="#[vars.httpStatus]">
+				<http:body><![CDATA[#[output application/json --- payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="47f4aba1-a154-4f44-91c8-99b1b2df4618" message='#["Inside Get Registered Clients"]' />
+		<choice doc:name="Choice" doc:id="5850f39a-03da-4154-9967-d66271d9a14d">
+			<when
+				expression="#[attributes.headers.'oauthproviderpassword'== p('secure::oauth.provider.password')]">
+				<os:retrieve-all doc:name="Get Clients"
+					doc:id="6d42268e-e6e9-4701-b2fa-75cf544de1d0" objectStore="clientObjectStore" />
+				<ee:transform doc:name="Map Clients"
+					doc:id="687823fe-c7ff-4a03-924f-7ccb3c865dc5">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var totalClients = sizeOf(payload)
+---
+if( totalClients> 0 ) {
+	clientsRegistered: totalClients,
+	clients: payload pluck ((client, key) -> {
+		clientName: client.clientName,
+		clientId: client.clientId,
+		clientSecret: client.secret,
+		grantTypesSupported: client.clientAuthorizedGrantTypes
+	})
+} else "No clients are registered"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger"
+					doc:id="58556ea9-a1b4-43d0-ae09-be3c7920c37a" message="Get Registered Clients flow completed" />
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger"
+					doc:id="eeb85e45-96f2-4a91-a92d-4fd498c3ec3d"
+					message="Not allowed to get registered clients------- Wrong/No password provided" />
+				<raise-error doc:name="Raise error"
+					doc:id="8ff0bb1f-0436-45ba-af46-46bb30fb8c19" type="CLIENT_SECURITY:UNAUTHORIZED"
+					description="Access to get registered Client is restricted. Please provide valid Oauth provider password" />
+			</otherwise>
+		</choice>
+		<error-handler ref="oauthErrorHandler" />
+	</flow>
+	<flow name="revokeTokensFlow" doc:id="e2189ed8-369e-431d-9d57-01bbfe60ed56" >
+		<http:listener doc:name="Listener" doc:id="5c16a9af-e2f3-4a9c-8104-643c4d080cea" config-ref="listenerConfig" path="/revoke"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f7b52fc9-4e21-47b4-9002-fe56edebff3b" message="Inside Revoke tokens"/>
+		<os:retrieve-all doc:name="Get Tokens" doc:id="bd6d72f3-c680-4b2b-8c84-a9c71e0df56d" objectStore="tokenObjectStore"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4d6d8db0-dafa-4838-9ba6-559fe2bb7b10" message="#[output application/json
+---
+payload]"/>
+		<choice doc:name="Choice" doc:id="6ed9e14c-fcfa-4601-9805-2c4148f9bcac" >
+			<when expression="#[sizeOf(payload) &gt; 0]">
+				<ee:transform doc:name="Transform Message" doc:id="91267014-d612-4fff-9b1f-fc4f7a98901a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+payload pluck ((value, key) -> if (value.accessToken.expiresIn.seconds < 86300) {
+	token: value.accessToken.accessToken,
+} else null)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<foreach doc:name="For Each" doc:id="44db17f4-9484-47a8-8bab-9c9e3cf0a510">
+			<logger level="INFO" doc:name="Logger" doc:id="64e63f66-227f-42a7-ad30-9c167e3c6feb" message="#[payload]" />
+			<oauth2-provider:revoke-token doc:name="Revoke token" doc:id="33fb6665-3835-4e9d-9e23-a28779575f1b" config-ref="OAuth2Provider" token="#[payload.token]" />
+		</foreach>
+				<logger level="INFO" doc:name="Logger" doc:id="c7e492c6-95fe-4c6b-b6d4-a098b93d48d4" message="Revoke token flow completed" />
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="e7b3ddef-2ea6-44d5-b0ac-f073548c6989" message="No Tokens to revoke"/>
+			</otherwise>
+		</choice>	</flow>
+   
+
+</mule>

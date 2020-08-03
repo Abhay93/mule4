@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config
+		name="HTTP_Request_configuration_Bitly"
+		doc:name="HTTP Request configuration"
+		doc:id="585d5294-f89e-40fd-a501-8cddef20f4ba">
+		<http:request-connection protocol="HTTPS"
+			host="api-ssl.bitly.com" />
+	</http:request-config>
+	<flow name="bitlyFlow"
+		doc:id="783babb2-26d3-40b9-835b-416fc9d4457f">
+		<http:listener doc:name="Listener"
+			doc:id="4ccd4eb6-cd1c-4d17-9dcf-23a6e2e0bffd"
+			config-ref="HTTP_Listener_config:8081" path="/bitly" />
+		<ee:transform doc:name="Transform Message" doc:id="78718ffb-7c92-4a5d-952b-ff28de5a8e72" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+var url = "http://vistit.lfg.com"
+var httpsUrl = "http://vistit.lfg.com"
+---
+{
+	http: substringAfter(url, "://"),
+	https: substringAfter(httpsUrl, "://")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="3e0f9e58-8f24-44e9-a78d-93d07c5bc694" message="${app.name}"/>
+		<set-payload value="ASD" doc:name="Set Payload"
+			doc:id="ebcbaf84-6b54-45f3-8b0f-e928658539e5" />
+		<http:request method="POST" doc:name="Request"
+			doc:id="35022d48-fe1f-425e-ab57-d964c10c299e"
+			path="/oauth/access_token" config-ref="HTTP_Request_configuration_Bitly">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Basic YXN5YWRhdjE1OTNAZ21haWwuY29tOmJsQGx1dnNja3MuY29t"
+}]]]></http:headers>
+		</http:request>
+		 <logger level="INFO" doc:name="Logger"
+			doc:id="3277c0b3-d2cd-462d-a626-6d9c49cc3ed8"
+			message="#[vars.accessToken]" />
+		<set-payload
+			value='#[output applciation/json
+import * from dw::core::URL
+---
+{
+	"domain": "bit.ly",
+	"title": "string",
+	"group_guid": "string",
+	"tags": ["string"],
+	"deeplinks": [{
+		"app_uri_path": "string",
+		"install_type": "string",
+		"install_url": "string",
+		"app_id": "string"
+	}],
+	"long_url": encodeURI("www.muletutorials.com")
+}]'
+			doc:name="Set Payload" doc:id="422d7504-f248-4129-8473-d6059e5eff1e" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="5204190a-5460-4957-99b6-78f7cb05d8a1" message="#[payload]" />
+		<http:request method="POST" doc:name="Request"
+			doc:id="6e5a647e-b0f5-425c-9819-d34385b55481"
+			config-ref="HTTP_Request_configuration_Bitly" path="/v4/bitlinks">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer 353c312b30304416c77f3529517244d8b1d23ccf",
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="6be7bf16-5b6f-4751-b66c-0650b79bb6e8"
+			message="#[output application/json --- payload]" /> 
+	</flow>
+	<flow name="bitlyFlow1" doc:id="f5f7499a-b118-4302-9ff4-75a59039938a" >
+		<http:listener doc:name="Listener" doc:id="802079f5-d1df-4d7b-a191-c30c33224941" config-ref="HTTP_Listener_config:8081" path="/bitly-app"/>
+				<ee:transform doc:name="" doc:id="0e4a7b3d-912c-488b-90b5-c0026b885d11" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="sa" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+var url = "http://vistit.lfg.com"
+var httpsUrl = "http://vistit.lfg.com"
+---
+{
+	http: substringAfter(url, "://"),
+	https: substringAfter(httpsUrl, "://"),
+	http1: substringAfterLast(url, "/")
+}]]></ee:set-variable>
+				<ee:set-variable variableName="saSplit" ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/json
+var url = "http://vistit.lfg.com"
+var httpsUrl = "https://vistit.lfg.com"
+---
+{
+    http: splitBy(url, "://")[1],
+    https: splitBy(httpsUrl, "://")[1]
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0f9c53a0-4419-4664-833f-17142b7e656f" message="#[vars.sa]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d8e4dcec-da2e-4596-b286-98c28fcd71fc" message="#[vars.saSplit]"/>
+		<http:request method="POST" doc:name="Request" doc:id="88ecd7b6-9d47-4724-94aa-17c6846fd377" path="/oauth/access_token" config-ref="HTTP_Request_configuration_Bitly" target="accessToken">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	Authorization : "Basic bXVsZXR1dG9yaWFsc0BnbWFpbC5jb206YmxAbHV2c2Nrcy5jb20=",
+	client_secret : "0e88f5e4038f4953ac2c45f04276ca6b068c3ada",
+	client_id : "96a826896a16d96f6314171d2d284d1046f462a8"
+}]]]></http:headers>
+		</http:request>
+		<http:request method="POST" doc:name="Request" doc:id="e88e052d-61e0-4d08-8f0c-b01a94ff41de" config-ref="HTTP_Request_configuration_Bitly" path="/v4/bitlinks">
+			<http:body ><![CDATA[#[output application/json ---
+{
+	"long_url": "www.muletutorials.com/How-To-Configure-Jenkins-Pipeline-For-Mule-Apps-Part-2.htm"
+}]]]></http:body>
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	Authorization : "Bearer " ++ vars.accessToken,
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="d4bb4a8f-98d4-4e96-bbf3-37109f6b10f2" message="#[payload]"/>
+	</flow>
+</mule>

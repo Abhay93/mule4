@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+	xmlns:tns="http://www.example.org/product/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="product"
+	targetNamespace="http://www.example.org/product/" xmlns:pro="http://www.example.org/product">
+	<wsdl:types>
+		<xsd:schema xmlns="http://www.w3.org/2001/XMLSchema">
+			<import schemaLocation="product.xsd" namespace="http://www.example.org/product" />
+			
+			<xsd:element name="GetProductRequest">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="id" type="xsd:integer" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="GetProductResponse">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="product" type="pro:productType" />
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:schema>
+	</wsdl:types>
+
+	<wsdl:message name="GetProductInput">
+		<wsdl:part element="GetProductRequest" name="parameters" />
+	</wsdl:message>
+	<wsdl:message name="GetProductOutput">
+		<wsdl:part element="GetProductResponse" name="parameters" />
+	</wsdl:message>
+
+	<wsdl:portType name="ProductPortType">
+		<wsdl:operation name="GetProduct">
+			<wsdl:input message="tns:GetProductInput" />
+			<wsdl:output message="tns:GetProductOutput" />
+		</wsdl:operation>
+	</wsdl:portType>
+
+	<wsdl:binding name="ProductSoapBinding" type="tns:ProductPortType">
+		<soap:binding style="document"
+			transport="http://schemas.xmlsoap.org/soap/http" />
+		<wsdl:operation name="GetProduct">
+			<soap:operation soapAction="http://www.example.org/product/GetProduct" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+
+	<wsdl:service name="product">
+		<wsdl:port binding="tns:ProductSoapBinding" name="ProductSoapBinding">
+			<soap:address location="http://localhost:8082/" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

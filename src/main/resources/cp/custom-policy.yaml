@@ -1,0 +1,106 @@
+#Policy ID
+id: test
+#show on UI
+name: Test Custom Policy
+#shown as tooltip
+description: Testing
+#used for filter
+category: Custom
+type: custom
+#can be applied to resource level
+resourceLevelSupported: true
+encryptionSupported: false
+standalone: true
+requiredCharacteristics: []
+#fulfills
+#providedCharacteristics: 
+#  - "SAML assertion validation"
+providedCharacteristics: [Client ID Required]
+configuration:  
+- propertyName: expressionProp
+  name: expressionProp
+  description: A expression space-separated list of supported scopes
+  #string, expresison, boolean, int, radio
+  type: expression
+  optional: true
+  sensitive: false
+  #not allowed
+  allowMultiple: true
+  #not allowed
+  defaultValue: #[attributes.queryParams.'name']
+- propertyName: radioButtons
+  name: radioButtons
+  description: A radio space-separated list of supported scopes
+  #string, expresison, boolean, int, radio, keyValue
+  type: radio
+  options:
+  - name: HTTP Basic Authentication Header
+    value: httpBasicAuthenticationHeader
+  - name: Custom Expression
+    value: Custom
+  optional: true
+  sensitive: false
+  #not Aallowed
+  allowMultiple: true
+- propertyName: checkBoxes
+  name: checkBoxes
+  description: A check space-separated list of supported scopes
+  #string, expresison, boolean, int, radio, keyValue
+  type: checkboxes
+  options:
+  - name: HTTP Basic Authentication Header
+    value: httpBasicAuthenticationHeader
+  - name: Custom Expression
+    value: Custom
+  optional: true
+  sensitive: false
+  allowMultiple: true
+- propertyName: sensitiveString
+  name: sensitiveString
+  description: A space-separated list of supported scopes
+  #string, expresison, boolean, int, radio
+  type: string
+  optional: true
+  sensitive: true
+  allowMultiple: false
+  defaultValue: Akshatha
+- propertyName: InsensitiveString
+  name: InsensitiveString
+  description: A sensitive space-separated list of supported scopes
+  #string, expresison, boolean, int, radio
+  type: string
+  optional: true
+  sensitive: false
+  allowMultiple: true
+- propertyName: InsensitiveStringButNotMultiple
+  name: InsensitiveStringButNotMultiple
+  description: A sensitive space-separated list of supported scopes
+  #string, expresison, boolean, int, radio, cant put expression in that
+  type: string
+  optional: true
+  sensitive: false
+  allowMultiple: false
+- propertyName: intProp
+  name: intProp
+  description: A int space-separated list of supported scopes
+  #string, expresison, boolean, int, radio
+  type: int
+  minimumValue: 10
+  maximumValue: 20
+  optional: true
+  sensitive: false
+  allowMultiple: false
+- propertyName: booleanProp
+  name: booleanProp
+  description: In a user properties returned by the federation server when validating the access token with a 'X-AGW-' prefix.
+  type: boolean
+  optional: true
+  defaultValue: true
+  allowMultiple: false
+- propertyName: addedHeaderMap
+  name: Added Request Headers
+  description: Name and value of the headers injected before hitting the backend service
+  type: keyvalues
+  optional: true
+  sensitive: false
+  allowMultiple: false

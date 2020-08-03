@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:twilio-connector="http://www.mulesoft.org/schema/mule/twilio-connector" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/twilio-connector http://www.mulesoft.org/schema/mule/twilio-connector/current/mule-twilio-connector.xsd">
+	<flow name="twilioSendFlow" doc:id="baaa26db-122a-4803-99c9-9b274dfa6373" >
+		<http:listener doc:name="Listener" doc:id="fded5646-59e6-4d37-9436-b1576c10e8c5" config-ref="HTTP_Listener_config:8081" path="/tsend"/>
+		<twilio-connector:send-message doc:name="Send message" doc:id="c5eb9b42-df45-46d4-9307-39c1e852d3e8" config-ref="Twilio_Connector_Config" account-sid="AC521507e0c098a582f197bd84cd15efd0">
+			<twilio-connector:send-message-request-data ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+    Body: "You are now subscribed!",
+    From: "12512552936",
+    To: "917836890183"
+}]]]></twilio-connector:send-message-request-data>
+		</twilio-connector:send-message>
+		<logger level="INFO" doc:name="Logger" doc:id="ce09273c-8256-41c9-84a4-1c2aa694c340" message="#[payload]"/>
+	</flow>
+	<flow name="redactFlow" doc:id="d9aa637f-12bf-4f32-af5b-fd2353e660c8" >
+		<http:listener doc:name="Listener" doc:id="30e68d4a-252b-4fed-8524-10a1d6e88a2e" config-ref="HTTP_Listener_config:8081" path="/redact"/>
+		<twilio-connector:redact-message doc:name="Redact message" doc:id="13e5d685-caec-48b1-bc5e-ba6b2ce106a7" config-ref="Twilio_Connector_Config" account-sid="AC521507e0c098a582f197bd84cd15efd0" message-sid="SM96c4a68d48ca4d879adfc699d908d4ad">
+			<twilio-connector:redact-message-request-data ><![CDATA[#[{
+    Body: "",
+    From: "12512552936",
+    To: "917836890183"
+}]]]></twilio-connector:redact-message-request-data>
+		</twilio-connector:redact-message>
+		<logger level="INFO" doc:name="Logger" doc:id="638766dc-03c6-4ac3-9371-5bbe47f82e65" />
+	</flow>
+</mule>

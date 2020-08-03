@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:powershell="http://www.mulesoft.org/schema/mule/powershell"
+xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:nexmo-messages-api="http://www.mulesoft.org/schema/mule/nexmo-messages-api"
+	xmlns:nexmo-smsapi="http://www.mulesoft.org/schema/mule/nexmo-smsapi"
+	xmlns:twilio-connector="http://www.mulesoft.org/schema/mule/twilio-connector"
+	xmlns:ldap="http://www.mulesoft.org/schema/mule/ldap" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
+	xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd 
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ldap http://www.mulesoft.org/schema/mule/ldap/current/mule-ldap.xsd
+http://www.mulesoft.org/schema/mule/twilio-connector http://www.mulesoft.org/schema/mule/twilio-connector/current/mule-twilio-connector.xsd
+http://www.mulesoft.org/schema/mule/nexmo-smsapi http://www.mulesoft.org/schema/mule/nexmo-smsapi/current/mule-nexmo-smsapi.xsd
+http://www.mulesoft.org/schema/mule/nexmo-messages-api http://www.mulesoft.org/schema/mule/nexmo-messages-api/current/mule-nexmo-messages-api.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/powershell http://www.mulesoft.org/schema/mule/powershell/current/mule-powershell.xsd">
+	<http:listener-config name="HTTP_Listener_config:8081"
+		doc:name="HTTP Listener config" doc:id="fe563ad8-d9f7-4544-b4bd-239b4a36dbc7">
+		<http:listener-connection host="0.0.0.0"
+			port="8081" />
+	</http:listener-config>
+	<powershell:config name="Powershell_Configuration" doc:name="Powershell Configuration" doc:id="e26f8260-ffc8-4cd3-b60d-6de3d1e063ec" >
+		<powershell:powershell-connection host="103.5.135.10" username='#["ADMIN 2"]' password="128125" />
+	</powershell:config>
+	<http:listener-config name="HTTP_Listener_config:8082"
+		doc:name="HTTP Listener config" doc:id="5b6ab2c4-c2db-4959-8bf8-e133e6340104">
+		<http:listener-connection host="localhost"
+			port="8082" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration"
+		doc:name="HTTP Request configuration" doc:id="39640bb9-d2e9-4f14-8b6f-9fda6c60f2b9">
+		<http:request-connection host="localhost"
+			port="8082">
+		</http:request-connection>
+	</http:request-config>
+	<file:config name="File_Config" doc:name="File Config"
+		doc:id="ffd6536c-a862-47e6-9b4a-bf33d8006518">
+		<file:connection workingDir="D:/file" />
+	</file:config>
+	<configuration-properties doc:name="Configuration properties"
+		doc:id="e3592a90-f0bd-4a97-a942-72b99c77cd1a" file="properties/dev.yaml" />
+	<secure-properties:config name="Secure_Properties_Config"
+		doc:name="Secure Properties Config" doc:id="1c346f82-d014-4407-b611-a851ad9ca925"
+		file="properties/secure-dev.yaml" key="128125">
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<salesforce:sfdc-config name="Salesforce_Config"
+		doc:name="Salesforce Config" doc:id="234d6f4a-6660-47eb-b5f8-19ae4673236b">
+		<salesforce:cached-basic-connection
+			username="abhay@128125.com" password="Maya@128125" securityToken="zzeWeFa6FHf94zHEU9ufrRFvn" />
+	</salesforce:sfdc-config>
+	<vm:config name="VM_Config" doc:name="VM Config"
+		doc:id="27bf3bab-ee23-4f6e-95d6-9d09e336896f">
+		<vm:connection />
+		<vm:queues>
+			<vm:queue queueName="queue" />
+		</vm:queues>
+	</vm:config>
+	<ldap:config name="LDAP_Configuration" doc:name="LDAP Configuration"
+		doc:id="15793380-a68d-4ef2-8ac0-c0d7ef798c21">
+		<ldap:basic-connection authDn="uid=admin,ou=system"
+			authPassword="secret" url="ldap://localhost:10389" />
+	</ldap:config>
+	<twilio-connector:config name="Twilio_Connector_Config"
+		doc:name="Twilio Connector Config" doc:id="0578f60b-d2c1-41b3-ad65-06c6d6e52c27"
+		property_username="AC521507e0c098a582f197bd84cd15efd0"
+		property_password="8eeacaab208d16e30281c06d5bb150ec">
+		<twilio-connector:connection />
+	</twilio-connector:config>
+	<nexmo-smsapi:config name="Nexmo_SMS_API_Config"
+		doc:name="Nexmo SMS API Config" doc:id="42450d47-a481-48d8-98b0-7aedaeec2438">
+		<nexmo-smsapi:connection />
+	</nexmo-smsapi:config>
+	<nexmo-messages-api:config name="Nexmo_Messages_API_Config"
+		doc:name="Nexmo Messages API Config" doc:id="ddafe67d-7dfa-45a2-a0f4-c850b911fb26"
+		property_username="asyadav1593@gmail.com" property_password="Maya@128125">
+		<nexmo-messages-api:connection />
+	</nexmo-messages-api:config>
+	<db:config name="MySQL_Database_Config" doc:name="Database Config"
+		doc:id="df736ca7-e4e6-4fe6-9dee-885c3e8a89ad">
+		<db:my-sql-connection host="localhost" port="3306"
+			user="root" password="128125" database="demo" />
+	</db:config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config"
+		doc:id="7e5603c1-a240-46cd-afff-53307ebdb690">
+		<wsc:connection wsdlLocation="wsdl/product.wsdl"
+			service="product" port="ProductSoapBinding" address="http://localhost:8082/" />
+	</wsc:config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="b482b823-3e94-443b-a851-0083548e2b1b" persistent="false" maxEntries="100" entryTtl="2" entryTtlUnit="MINUTES"/>
+	<spring:config name="springConfig" files="beans.xml"
+		doc:id="acea6794-a7aa-4fd8-9256-b797cc0a053f" />
+
+	<spring:security-manager>
+		<spring:delegate-security-provider
+			name="memory-provider" delegate-ref="authenticationManager" />
+	</spring:security-manager>
+	<amqp:config name="AMQP_Config" doc:name="AMQP Config" doc:id="80c3ddd9-77d0-4eae-8b09-c9d16fc12445" >
+		<amqp:connection host="localhost" port="5672" username="guest" password="guest" >
+			<amqp:fallback-addresses />
+		</amqp:connection>
+	</amqp:config>
+
+</mule>

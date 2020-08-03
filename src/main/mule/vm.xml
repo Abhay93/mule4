@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="publishFlow" doc:id="8ad16755-5129-4ad6-adea-e0b1b343f939" >
+		<http:listener doc:name="Listener" doc:id="df1051c3-cc3e-4c71-869a-71cd2d5e5145" config-ref="HTTP_Listener_config:8081" path="/pub"/>
+<!-- 		<logger level="INFO" doc:name="Logger" doc:id="af3d3d5e-51ca-4fab-aa02-c05d8d332fef" message="Satrted Flow" category="PUBLISH"/> -->
+		<vm:publish doc:name="Publish" doc:id="ef2056f1-bf7d-4e31-aefb-d200bfaed0e5" config-ref="VM_Config" queueName="queue">
+			<vm:content ><![CDATA[#[{"op": attributes.queryParams.op}]]]></vm:content>
+		</vm:publish>
+		<logger level="INFO" doc:name="Logger" doc:id="e5fac4e4-e3a2-40a0-b810-1ca5290cd2e3" message="#[payload]" category="PUBLISH" />
+<!-- 		<logger level="INFO" doc:name="Logger" doc:id="74781d8d-2c73-4e41-a212-b00eee41ba59" message="Flow Completed" category="PUBLISH"/> -->
+	</flow>
+	<flow name="listenerFlow" doc:id="c7f1fce3-4106-4f02-b335-a44145e4e0b1" initialState="stopped">
+		<vm:listener queueName="queue" doc:name="Listener" doc:id="91ca0b84-663e-4c71-bc64-981929cbac06" config-ref="VM_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3285aff3-8ba8-4beb-a328-244c8cee399b" message='#[payload]' category="LISTENER"/>
+		<set-payload value='#[{"op":"Listener"}]' doc:name="Set Payload" doc:id="6c7afbaf-c533-4010-b8e5-1af1ee9bc06d" />
+<!-- 		<logger level="INFO" doc:name="Logger" doc:id="1e23dc1c-9659-40f5-8e5a-9cd312e8d88b" message="#[payload]" category="LISTENER"/> -->
+	</flow>
+	<flow name="publishConsumeFlow" doc:id="1233bb06-db6a-48d6-a8ba-3c1484ed115c" >
+		<http:listener doc:name="Listener" doc:id="3d7e6703-3b9a-4eb5-9f28-3bcf9f8d561b" config-ref="HTTP_Listener_config:8081" path="/pc" />
+		<logger level="INFO" doc:name="Logger" doc:id="b2f61a90-862a-417d-9372-2d3da78397f2" message="Satrted Flow" category="PUBCON"/>
+		<vm:publish-consume queueName="queue" doc:name="Publish consume" doc:id="c3124583-6c83-4501-b847-ecb52ed03b68" config-ref="VM_Config" >
+			<vm:content ><![CDATA[#[{"op":"Publish-Consume"}]]]></vm:content>
+		</vm:publish-consume>
+		<logger level="INFO" doc:name="Logger" doc:id="bb60a867-ff9e-4882-a5ad-0e8860b9c502" message="#[payload]" category="PUBCON" />
+		<logger level="INFO" doc:name="Logger" doc:id="e9039276-2c0e-4387-bc77-c368e496c192" message="Flow Completed" category="PUBCON" />
+	</flow>
+	<flow name="consumeFlow" doc:id="c51f9dc7-7a87-4161-a83d-a22554394d34" >
+		<http:listener doc:name="Listener" doc:id="5a11f21f-2aad-49e4-ad40-e9fe65841cfe" config-ref="HTTP_Listener_config:8081" path="/consume"/>
+		<vm:consume doc:name="Consume" doc:id="2c0f7853-096a-421e-b0fb-ddf00dd0de12" config-ref="VM_Config" queueName="queue"/>
+		<logger level="INFO" doc:name="Logger" doc:id="0dd14559-ada9-4c98-8773-61080108eabb" category="CONSUME" message="#[payload]"/>
+	</flow>
+	</mule>

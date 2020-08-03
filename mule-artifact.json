@@ -1,0 +1,14 @@
+{
+	"minMuleVersion": "4.2.1",
+	"configs": [
+    "global.xml", "choice.xml", "amqp.xml", "bitly.xml"
+  ],
+	"classLoaderModelLoaderDescriptor": {
+		"id": "mule",
+		"attributes": {
+			"exportedResources": [
+				"beans.xml"
+			]
+		}
+	}
+}

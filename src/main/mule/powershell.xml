@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:powershell="http://www.mulesoft.org/schema/mule/powershell"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/powershell http://www.mulesoft.org/schema/mule/powershell/current/mule-powershell.xsd">
+	<flow name="powershellFlow" doc:id="249ab0ba-0a23-4803-b7bc-2c278378d261" >
+		<http:listener doc:name="Listener" doc:id="315e6b62-16e7-461f-b3ec-ab4e161de7f5" config-ref="HTTP_Listener_config:8081" path="/ps"/>
+		<powershell:execute-command doc:name="Execute command" doc:id="6fcbb527-63e3-4581-a83b-0b95a64fc1a4" config-ref="Powershell_Configuration" command="ipconfig"/>
+	</flow>
+</mule>

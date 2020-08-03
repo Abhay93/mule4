@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:http-policy="http://www.mulesoft.org/schema/mule/http-policy"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+               http://www.mulesoft.org/schema/mule/http-policy http://www.mulesoft.org/schema/mule/http-policy/current/mule-http-policy.xsd
+               http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+			   http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http-policy:proxy name="{{{policyId}}}-custom-policy">
+		<http-policy:source
+			propagateMessageTransformations="true">
+			<logger message="Started Policy execution v1.8.8" />
+			<logger message="Policy ID{{{policyId}}}" />
+			<set-variable value="{{{expressionProp}}}" variableName="name" />
+			<logger message="EXPRESSION VALUE::#[vars.name]" />
+			<logger message="EXPRESSION TYPE****#[typeOf(vars.name)]****" />
+			<logger message="RADIO BUTTONS:: ****{{{radioButtons}}}****" />
+			<!--<logger message="CHECK BOXES:: ****{{{checkBoxes}}}****" /> -->
+			<logger message="TYPE OF ABHAY ****#[typeOf('Abhay')]****" />
+			<logger
+				message="POLICY:: expressionProp is ****#[typeOf(attributes.queryParams.'name')]****" />
+			<logger
+				message='OLICY:: expressionPropCheck is ****"{{{expressionProp}}}"****' />
+			<logger
+				message='OLICY:: expressionPropCheckBoolean is ****#[vars.name=="Abhay"]****' />
+			<logger
+				message='OLICY:: expressionPropCheckBoolean handleis ****#["{{{expressionProp}}}"=="Abhay"]****' />
+			<logger message="sensitiveString is {{sensitiveString}}" />
+			<!-- ' "#[attributes.queryParams.'name']"=="Abhay" ' -->
+			<set-variable value='"{{{expressionProp}}}"=="Abhay"'
+				variableName="nameGlag" />
+			<set-variable value='#[attributes.queryParams."name" == "Abhay"]'
+				variableName="nameEflag" />
+			<logger message="Name::#[vars.nameGlag]" />
+			<logger message="Name::#[vars.nameEflag]" />
+			<logger message="sensitiveString is {{sensitiveString}}" />
+			<logger message="InsensitiveString is {{InsensitiveString}}" />
+			<!-- <logger message="InsensitiveStringType is #[typeOf({{{InsensitiveString}}})" 
+				/> -->
+			<ee:transform>
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	name: vars.name,
+	id: 1
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<try>
+				<choice>
+					<when expression='vars.name== "Abhay"'>
+						<logger message="Started Flow execution" />
+						<logger message="expressionProp is {{{expressionProp}}}" />
+						<logger message="addedHeaderMap is {{addedHeaderMap.name}}" />
+						<http-policy:execute-next />
+						<set-payload value="Hello World!" />
+					</when>
+					<otherwise>
+						<logger message="Avoid Flow execution" />
+						<raise-error type="ANY" description="Raised error" />
+					</otherwise>
+				</choice>
+				<error-handler>
+					<on-error-continue>
+						<logger message="Caught Error" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</http-policy:source>
+	</http-policy:proxy>
+</mule>

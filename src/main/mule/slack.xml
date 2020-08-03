@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:slack="http://www.mulesoft.org/schema/mule/slack" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/slack http://www.mulesoft.org/schema/mule/slack/current/mule-slack.xsd">
+	<flow name="slackFlow" doc:id="9ca86d8b-baae-479d-b211-74bcc4277fcb" >
+		<http:listener doc:name="Listener" doc:id="fd698a5f-ee41-45db-a715-03bb4381f338" config-ref="HTTP_Listener_config:8081" path="/slack"/>
+		<logger level="INFO" doc:name="Logger" doc:id="1ed04b18-0441-4687-9459-d95f61ab9351" message="asdsa"/>
+<!-- 		<slack:list-channels doc:name="Channels - List" doc:id="49c62778-0c1a-4772-b38c-6f6f16bc432e" /> -->
+	</flow>
+</mule>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="file-connector-testFlow" doc:id="4701282f-1fdc-461a-baf3-e9432897069c">
+		<scheduler doc:name="Scheduler" doc:id="0f7f3431-c77a-4465-aa1b-1784889bec58">
+			<scheduling-strategy>
+				<fixed-frequency frequency="1"/>
+			</scheduling-strategy>
+		</scheduler>
+		<file:list doc:name="List" doc:id="c646656a-9b11-4b50-8f38-cbe5a1bb8215"
+			directoryPath="C:\Users\ADMIN 2\Downloads" />
+		<ee:transform doc:name="Transform Message" doc:id="bf7e58dd-ea81-47bf-af1b-36d896e7cafd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+(payload orderBy $.attributes.lastModifiedTime)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="e446fae0-6249-4f07-8905-07ca08f97ff1">
+			<file:write doc:name="Write" doc:id="d4586845-8dd7-4aed-bec6-a38f23b6b732" path='#["D:\file\moved\\" ++ vars.counter]'/>
+			<logger level="INFO" doc:name="Logger"
+				doc:id="c5c85b4f-f5cc-4a1a-adfa-7eeb0f01a47e" message="#['Current Processing File: ' ++ attributes.fileName]" />
+		</foreach>
+	</flow>
+</mule>

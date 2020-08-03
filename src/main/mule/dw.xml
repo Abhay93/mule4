@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<flow name="dataweaveFlow" doc:id="cc4cfbfc-8745-4f6c-8983-26044470bbea" maxConcurrency="1">
+		<http:listener doc:name="Listener"
+			doc:id="02bec77e-3018-4a40-8c47-9a652ed79b56" config-ref="HTTP_Listener_config:8081"
+			path="/dw" />
+		<flow-ref doc:name="Flow Reference" doc:id="2ad97386-9b31-4a32-aed2-7b500fe5806f"
+			name="tsf" />
+		<logger level="INFO" doc:name="Logger" doc:id="8cfe69a1-6e4a-478f-a61c-caf5b3299b9b" message="#[payload]" category="MAIN"/>
+		<ee:transform doc:name="Transform Message"
+			doc:id="d78f280c-4229-4598-8abf-c5713f81e310">
+			<ee:message>
+				<ee:set-payload><![CDATA[output application/xlsx header=false
+---
+{
+  Sheet1: [
+    {
+      firstName: "John",
+      lastName: "Doe"
+    },
+    {
+      firstName: "Jane",
+      lastName: "Doe"
+    }
+  ]
+}]]></ee:set-payload>
+				<ee:set-attributes ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"version": "mule4"
+}]]></ee:set-attributes>
+			
+</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="1724ca38-0bb8-453f-9e37-bd7f240b5074" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+fun test() = do {
+    var name = "Mule"
+---
+name
+}
+var testVar = do {
+    var name = "Mule"
+---
+name
+}
+---
+if(sizeOf("Mule")==4) "Hi! Mule" else "Duh!"
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="09c7deed-12ce-4ef2-be11-30a1a802f228" message="#[payload]" />
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="aee49011-70de-44f7-a956-77fa9c4b7337" >
+				<logger level="INFO" doc:name="Logger" doc:id="40c44de4-9794-4277-a266-db6b19a01295" message="#[payload]"/>
+				<set-variable value="#[payload]" doc:name="Set Variable" doc:id="933a560e-dc01-4b20-941b-114b338a42d0" variableName="status-prop"/>
+				<set-payload value="#[vars.status]" doc:name="Set Payload" doc:id="179a6c49-9467-4ea4-8cdd-8eba72e547f3" />
+				<logger level="INFO" doc:name="Logger" doc:id="114831c1-3ddc-47f3-98a6-43db920056b5" message="#[payload]"/>
+			</on-error-propagate>
+		</error-handler>
+	
+</flow>
+		<sub-flow name="tsf" doc:id="84102ee8-dd59-46b8-a63d-a5cad3cef826" >
+		<ee:transform doc:name="Transform Message" doc:id="3549815e-654c-406e-a5be-e9b93765a33d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var lookup = lookup("lookupFlow",{"op":"lookup"},10000)
+---
+lookup]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="lookupFlow" doc:id="a84f28d7-e66c-4e5f-ae50-319deced3a57" maxConcurrency="1">
+		<flow-ref doc:name="Flow Reference" doc:id="c44bfc89-687a-4d00-aba0-93c31e0238ae" name="sf" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1678f26e-71ce-40ec-a4ef-accd41db76ed" >
+				<set-payload value='#["Failed"]' doc:name="Set Payload" doc:id="0a5d62da-b903-4e4e-a090-d8cfdab061b0" />
+				<set-variable value="FAILED" doc:name="Set Variable" doc:id="dba4fd54-385c-44de-b016-be26464494c9" variableName="status"/>
+				<logger level="INFO" doc:name="Logger" doc:id="c750fedd-189d-4e7b-91d9-aa0ac4a25f31" message="CAUGHT" category="ERROR"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<sub-flow name="sf" doc:id="6499b0b0-73ca-4251-8e9f-124bd5e7021b">
+		<scripting:execute doc:name="Execute" doc:id="398279da-312d-4c8f-ade2-9ddb6a0449cb" engine="groovy">
+			<scripting:code>throw new IllegalArgumentException(&quot;IAR&quot;);</scripting:code>
+		</scripting:execute>
+		<set-payload value='#["abhayoo"]' doc:name="Set Payload" doc:id="598843a2-83ef-4536-b9b9-b822ae4629bd" />
+	</sub-flow>
+	<flow name="dwFlow" doc:id="d611cc7e-708e-467e-b6b2-2786caa11caa" >
+		<http:listener doc:name="Listener" doc:id="1031dbb0-9c71-4331-9731-2b51fb53fa49" config-ref="HTTP_Listener_config:8081" path="/excel"/>
+		<ee:transform doc:name="Transform Message" doc:id="469d1395-807f-4088-a7f0-2913fc0d1dfd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xlsx header=false, tableOffset="A5", ignoreEmptyLine=true
+---
+{
+	Sheet1: [
+    {
+		firstName: "John",
+		lastName: "Doe"
+	},
+    {
+		firstName: "Jane",
+		lastName: "Doe"
+	},
+    {
+	},
+    {
+		firstName: "Joe",
+		lastName: "Doe"
+	},
+    
+  ]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="130edeb9-d35b-44a3-acd1-ec080b041abe" config-ref="File_Config" path="data.xlsx"/>
+	</flow>
+	<flow name="dwFlow1" doc:id="6b9e1f70-8bcc-480f-a3e2-8cb9de60472f" >
+		<http:listener doc:name="Listener" doc:id="36301840-555d-4066-9aa4-8818abcc8750" config-ref="HTTP_Listener_config:8081" path="/runtime"/>
+		<ee:transform doc:name="Transform Message" doc:id="05d6db29-245e-48e5-812d-b7c3c642da17" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/json
+var a=123
+---
+{
+	fail: if(1==2) fail('Condition failed') else "It's plausible",
+	failIf: "It's plausible" failIf(1==2),
+	locationString: locationString(a),
+	prop: prop("user.home"),
+	props: props()
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+
+</mule>

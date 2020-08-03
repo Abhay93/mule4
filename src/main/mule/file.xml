@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<file:config name="File_Config1" doc:name="File Config" doc:id="d92aa5af-256e-4d8d-b211-bfae40be36da" >
+		<file:connection workingDir="D:/file/moved" />
+	</file:config>
+	<flow name="listFiles" doc:id="4ff7cfa2-4ca9-46cf-85b2-8599a5392730">
+		<http:listener doc:name="Listener"
+			doc:id="98b4b6d1-5b0a-4bc6-917a-60b42bef291d" config-ref="HTTP_Listener_config:8081"
+			path="/list" />
+		<file:list doc:name="List" doc:id="8a737edd-1d45-4f41-99d2-236be09bd80d"
+			directoryPath="D:/TH">
+		</file:list>
+		<!-- <logger level="INFO" doc:name="Logger" doc:id="056f7e8a-ce15-4544-9f1c-ca1305f87ee6" 
+			message="#[payload[6].payload]"/> -->
+		<foreach doc:name="For Each" doc:id="7c3ff710-c63e-4e39-9cb4-189da04841a4">
+			<logger level="INFO" doc:name="Logger"
+				doc:id="c7677e9f-78b5-44e2-a7e9-af404b27b571" message="#[payload]" />
+		</foreach>
+	</flow>
+	<flow name="readFile" doc:id="bbdeb08c-0000-41d3-b80e-9c5071fff710">
+		<http:listener doc:name="Listener"
+			doc:id="18767175-56a8-4c61-8005-2e434050bec8" config-ref="HTTP_Listener_config:8081"
+			path="/read" />
+		<file:read doc:name="Read" doc:id="5aba6b2d-dd3f-4473-9e4a-1f54f9993dae"
+			path="settings-data.xml" config-ref="File_Config" outputMimeType="application/dw" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="d41046f3-6ff6-4354-9eec-4dd2b987dcc2" message="#[payload]" />
+	</flow>
+	<flow name="copyFile" doc:id="4748d22c-c82b-44a7-b4c6-1056cf23563f">
+		<http:listener doc:name="Listener"
+			doc:id="a3958f87-532c-44be-b1cf-55024febcb6d" config-ref="HTTP_Listener_config:8081"
+			path="/copy" />
+		<file:copy doc:name="Copy" doc:id="f5d1e718-5909-4eb1-9ef2-73fe15c0c8a8"
+			config-ref="File_Config" sourcePath="settings-data.xml" renameTo="copied.xml"
+			targetPath="/" overwrite="true" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="6b58f6fd-a8a0-48d1-be08-ecee2545f5b6" />
+		<file:move doc:name="Move" doc:id="1824498f-bcd8-4fec-ac5e-d65d44d6682a"
+			config-ref="File_Config" sourcePath="settings-data.xml" targetPath="/"
+			renameTo="settings.xml" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="0dbd52c9-baf9-45c9-99e6-ff3810a56406" />
+	</flow>
+	<flow name="writeFile" doc:id="c24908a0-da62-4df7-8300-855c004ab80a">
+		<http:listener doc:name="Listener"
+			doc:id="d6a8122b-fcaf-4756-9d1c-f799f43f7efd" config-ref="HTTP_Listener_config:8081"
+			path="/write" />
+		<file:write doc:name="Write" doc:id="ed041403-05dd-4d8f-9333-0769ed857169"
+			config-ref="File_Config" path="file.json" mode="APPEND">
+			<file:content><![CDATA[#[%dw 2.0
+output application/json
+---
+{"name":"John", "age":25}]]]></file:content>
+		</file:write>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="f5f846d6-befd-4dce-93ba-f833b1b37460" />
+	</flow>
+	<flow name="deleteFile" doc:id="e3169871-e7e0-4bfb-8d00-99a7b853375d">
+		<http:listener doc:name="Listener"
+			doc:id="1b047832-3b25-44f1-8e86-fa4efa14232e" config-ref="HTTP_Listener_config:8081"
+			path="/delete" />
+		<file:delete doc:name="Delete"
+			doc:id="26bb0414-fcdf-4096-a3e3-0c02f09cc7c0" config-ref="File_Config"
+			path="settings-data.xml" />
+	</flow>
+	<flow name="createDirectoryFlow" doc:id="60738218-dd29-452e-b04f-29b15f52b54c">
+		<http:listener doc:name="Listener"
+			doc:id="a66f1cc6-8a45-43ab-91ef-b19ce44295da" config-ref="HTTP_Listener_config:8081"
+			path="/cd" />
+		<file:create-directory doc:name="Create directory"
+			doc:id="53984266-49dd-485e-b98e-af38389dae67" config-ref="File_Config"
+			directoryPath="D:/TH/cd" />
+	</flow>
+	<flow name="newOrUpdatedFlow" doc:id="da35d2bb-207d-44e8-9f1c-0f3287de91b7"
+		initialState="stopped">
+		<file:listener doc:name="On New or Updated File"
+			doc:id="b70e9b9b-144c-45fd-9fc5-0e871c31055c" config-ref="File_Config"
+			directory="D:/file" moveToDirectory="D:/file/moved">
+			<scheduling-strategy>
+				<fixed-frequency />
+			</scheduling-strategy>
+		</file:listener>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="4dff1fd7-a377-48c3-b389-f3ceb7804d83" />
+	</flow>
+	<flow name="fileFlow" doc:id="db324059-ee74-4782-b33f-7431fa29e9a2"
+		initialState="started">
+		<http:listener doc:name="Listener"
+			doc:id="75a454b6-d9b8-4715-bb36-d4e0c89c0a53" config-ref="HTTP_Listener_config:8081"
+			path="/lf" />
+		<file:list doc:name="List" doc:id="e9254ad5-e23b-4d3d-9e58-adf138ed89ed"
+			directoryPath="D:\file\read" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="05652b25-95a1-413a-a99a-68e5794c7aa2" message="Read"
+			category="LIST" />
+		<ee:transform doc:name="Transform Message" doc:id="29caec65-fa87-4831-a9ca-33f0bf8589ac" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+(payload orderBy $.attributes.lastModifiedTime)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="60ffcb28-2297-4d93-8fa5-f603c69d3915">
+			<file:write doc:name="Write" doc:id="d91271c5-7fcc-4edc-8f15-728c0c1753f5" config-ref="File_Config1" path='#[attributes.fileName]'/>
+			<logger level="INFO" doc:name="Logger"
+				doc:id="dcb0fe24-65ed-426e-bb07-b7b8a7476be9" message="#[payload]" />
+		</foreach>
+	</flow>
+</mule>

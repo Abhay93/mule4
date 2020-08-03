@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:nexmo-messages-api="http://www.mulesoft.org/schema/mule/nexmo-messages-api"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:nexmo-smsapi="http://www.mulesoft.org/schema/mule/nexmo-smsapi"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/nexmo-smsapi http://www.mulesoft.org/schema/mule/nexmo-smsapi/current/mule-nexmo-smsapi.xsd
+http://www.mulesoft.org/schema/mule/nexmo-messages-api http://www.mulesoft.org/schema/mule/nexmo-messages-api/current/mule-nexmo-messages-api.xsd">
+	<flow name="nexmoFlow" doc:id="d82f1b04-2000-49b3-a7fb-9d6fcb225d23" >
+		<http:listener doc:name="Listener" doc:id="625e018f-24ea-412f-8851-3aedb2ea9f5b" config-ref="HTTP_Listener_config:8081" path="/sendsms"/>
+		<nexmo-smsapi:send-an-sms doc:name="Send an sms" doc:id="4f3ba0e5-99f8-4bc6-8cbd-77af90003d65" config-ref="Nexmo_SMS_API_Config" api-key="b7f66976" api-secret="j88fJ5kMPCtqW1uI" from="Abhay" to="918610466301" text="Hi SWamiooooo"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c397eff4-34a2-4558-8d1b-b2caf138f480" message="#[payload]"/>
+	</flow>
+	<flow name="nexmoFlow1" doc:id="0c33db9c-082a-4ff0-a80d-466e887c1068" >
+		<http:listener doc:name="Listener" doc:id="ade83d49-0b9e-4fa5-a77e-cb9f2c2dae93" config-ref="HTTP_Listener_config:8081" path="/sendmsg"/>
+		<nexmo-messages-api:send-a-message doc:name="Send a message" doc:id="00ef6989-2700-4e5b-88a6-211732917d82" config-ref="Nexmo_Messages_API_Config">
+		</nexmo-messages-api:send-a-message>
+		<logger level="INFO" doc:name="Logger" doc:id="1ca34dd4-58b6-4091-bcf6-58f0ea6c5ae8" />
+	</flow>
+</mule>

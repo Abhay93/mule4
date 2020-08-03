@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="parseTemplateFlow" doc:id="6a2ffcb6-cfba-4b36-8ca3-407fb9a643f3" >
+		<http:listener doc:name="Listener" doc:id="bcdeb798-386d-4b73-b050-75630c8d910d" config-ref="HTTP_Listener_config:8081" path="/pt"/>
+		<parse-template doc:name="Parse Template" doc:id="a9f4fc99-d9df-470a-bb4e-ae975c2a0453" location="temp.template">
+		</parse-template>
+		<logger level="INFO" doc:name="Logger" doc:id="a5086ac8-0c25-4601-9df4-ad245e2e8085" message="#[payload]"/>
+<!-- 		<parse-template doc:name="Parse Template" doc:id="21414c7c-3604-4c71-971f-cac2d37440e2" target="data" targetValue="#[payload]"> -->
+<!-- 			<content >{ -->
+<!-- &quot;name&quot;:#[attributes.queryParams.'first_name'] , -->
+<!-- &quot;lastname&quot;:#[attributes.queryParams.'last_name'] -->
+<!-- }</content> -->
+<!-- 		</parse-template> -->
+<!-- 		<logger level="INFO" doc:name="Logger" doc:id="df5e2455-b3e5-482a-addd-cb92695bfa3f" message="#[vars.data]"/> -->
+	</flow>
+	
+</mule>

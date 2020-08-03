@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<flow name="createFlow" doc:id="c6fe5517-aba4-4927-979a-9dbbafa5a33f">
+		<http:listener doc:name="Listener" doc:id="4fbfb58c-a875-45ba-b308-a4fd73272262" config-ref="HTTP_Listener_config:8081" path="/query"/>
+<!-- 		<salesforce:query doc:name="Query" doc:id="08ff85dd-2506-4629-adb9-308f564d5e0e" config-ref="Salesforce_Config"> -->
+<!-- 		</salesforce:query> -->
+		<logger level="INFO" doc:name="Logger" doc:id="4552c28c-4b84-46e8-83d8-7ce9d32f8415" message="Create Flow Started"/>
+		<salesforce:create doc:name="Create" doc:id="5388c69a-882e-45a1-b450-cfea0c7ccadc" config-ref="Salesforce_Config" type="Account"/>
+	</flow>
+</mule>

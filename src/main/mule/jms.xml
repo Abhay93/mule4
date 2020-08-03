@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="d4a13910-586f-44ff-93d9-e34994bc3921" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:caching-strategy >
+				<jms:no-caching />
+			</jms:caching-strategy>
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="jmsFlow" doc:id="e28db537-9d7c-48a3-8e85-7056d8748f61" >
+		<jms:listener doc:name="Listener" doc:id="2a1ab53a-56be-4145-964e-ba7e14e8eaf5" config-ref="JMS_Config" destination="enqueue">
+			
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="d215df44-840c-4966-b75e-0f05b176c0f5" message="#[payload]"/>
+		<set-payload value="from Mule" doc:name="Set Payload" doc:id="757dd29f-3607-46e2-8ae3-43a7384d07ed" />
+		<raise-error doc:name="Raise error" doc:id="2c44b830-1c97-4ef4-b55f-9a0375eacea2" type="ANY" description="FAILED"/>
+		<logger level="INFO" doc:name="Logger" doc:id="25f97fc4-d70e-4814-8c88-9de87a363321" message="#[payload]" category="FINAL"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2c70ad52-93a6-4243-b28b-6ce8e5183a28" />
+		<error-handler>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f8accbed-fecd-4b71-9194-a4152cc3a9a5" >
+				<logger level="INFO" doc:name="Logger" doc:id="978b4823-3250-4d41-89b2-b00117fe7f5d" message="#[payload]"/>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>

@@ -1,0 +1,5 @@
+<http-policy:source>
+	<logger message="Started Policy execution" />
+	<http-policy:execute-next />
+	<logger message="Completed Policy execution" />
+</http-policy:source>

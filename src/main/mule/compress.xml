@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="choiceFlow" doc:id="48d13d5e-deb8-4508-bc37-ca00fab04c6e" >
+		<http:listener doc:name="Listener" doc:id="468e72c6-8a3d-488b-baab-e9f5a712b7c5" config-ref="HTTP_Listener_config:8081" path="/choice"/>
+		<set-variable value="mule4" doc:name="version" doc:id="6666beda-dae8-4a7e-89d9-eafde7fa8c5d" variableName="version"/>
+		<ee:transform doc:name="Transform Message" doc:id="23acb5c9-eb3b-44a0-a70a-90c67b668047" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	version: "${secure::version-secure}",
+	"Secure-version": p('secure::version-secure')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ae1bfa14-30f7-4fb3-b569-5dbc30aff337" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="2ed9e2b0-d6ec-4e7e-bf74-7353b90c1599" >
+			<when expression="#[vars.version == '${version}']">
+				<logger level="INFO" doc:name="Logger" doc:id="11300350-0b7b-4bcf-9276-18d90c615eb7" message="Mule 4"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="143a777c-068d-41c1-bf95-1968d45b528f" message="Mule 3"/>
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

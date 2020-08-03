@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="schedulerFlow" doc:id="ccf67631-02ec-42d8-a2d1-66b2ddd0352d" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="18fa2e16-d9ff-4847-9575-00a6c1f5d139" >
+			<scheduling-strategy >
+				<cron expression="1/2 * * * * ?"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="099488d0-509f-4c6f-b84c-cb9743ca59db" message='#[now()]'/>
+	</flow>
+	
+</mule>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<flow name="javaFlow" doc:id="8ecfe9ad-7896-4b0e-8c9a-ad67c62e155c" >
+		<http:listener doc:name="Listener" doc:id="fd465020-9b17-4f0b-8805-8c6bb8771b7a" config-ref="HTTP_Listener_config:8081" path="/new"/>
+<!-- 		<java:new doc:name="New" doc:id="49188b28-729a-47b0-bcca-93df47f94119" class="test.Test" constructor="Test"> -->
+<!-- 			<java:args ><![CDATA[#[name: "John"]]]></java:args> -->
+<!-- 		</java:new> -->
+		<logger level="INFO" doc:name="Logger" doc:id="e39c41a4-9685-4259-9343-2d84c7d87679" message="#[payload]"/>
+	</flow>
+	<flow name="javaFlow1" doc:id="53e1af55-2971-4019-99f2-7d3aa437c457" >
+		<http:listener doc:name="Listener" doc:id="5fc0f310-5c35-4a0f-a242-ca1b67725585" config-ref="HTTP_Listener_config:8081" path="/is"/>
+<!-- 		<java:invoke-static doc:name="Invoke static" doc:id="a22d21d6-03c0-45bd-a7a8-53fbbde41fde" class="test.Test" method="greet"> -->
+<!-- 			<java:args ><![CDATA[#[name:"ABAHY"]]]></java:args> -->
+<!-- 		</java:invoke-static> -->
+<logger level="INFO" doc:name="Logger" doc:id="e39c41a4-9685-4259-9343-2d84c7d87679" message="#[payload]"/>	</flow>
+</mule>

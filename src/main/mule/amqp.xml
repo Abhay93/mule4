@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="amqpFlow" doc:id="97f2fe34-651d-4dbf-a6b0-ce4118066979" >
+		<http:listener doc:name="Listener" doc:id="68c9983f-de71-420c-b5b3-ea623ede1d44" config-ref="HTTP_Listener_config:8081" path="/amqp-publish"/>
+		<amqp:publish doc:name="Publish" doc:id="9a57f6f9-f16a-46f7-b62c-229b699dbd0d" config-ref="AMQP_Config" createFallbackExchange="true">
+			<amqp:routing-keys >
+				<amqp:routing-key value="amqp-q" />
+			</amqp:routing-keys>
+			<amqp:message >
+				<amqp:body ><![CDATA[#[output application/json --- {"op": attributes.queryParams.op}]]]></amqp:body>
+			</amqp:message>
+		</amqp:publish>
+<!-- 		<http:request method="GET" doc:name="Request" doc:id="7944df32-ab9e-45c6-b116-a912f4f63dbc" config-ref="HTTP_Request_configuration" path="/amqp-consume" target="httpResponsePayload"> -->
+<!-- 			<http:response-validator > -->
+<!-- 				<http:success-status-code-validator values="500,501" /> -->
+<!-- 			</http:response-validator> -->
+<!-- 		</http:request> -->
+		<logger level="INFO" doc:name="Logger" doc:id="d01889db-cd49-4ec8-b64e-bda48bdc8eb9" />
+	</flow>
+	<flow name="amqpFlow1" doc:id="b89574f7-8d59-47e2-8af3-2a01af09b8dd" initialState="stopped">
+		<amqp:listener doc:name="Listener" doc:id="3580d822-7090-4829-86f3-b22021b5f734" config-ref="AMQP_Config" queueName="amqp-q" inboundContentType="application/json">
+			<amqp:response>
+				<amqp:properties replyTo="amqp-r-q" />
+			</amqp:response>
+		</amqp:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="5b6346b7-9832-4504-a6e6-01ffca348c88" message="#[payload]" category="LISTENER"/>
+		<set-payload value='#[output application/json --- {"op": "AMQP reply payload"}]' doc:name="Set Payload" doc:id="45ad98ef-3696-4018-bbfd-4e5f7d19f33e" />
+	</flow>
+	<flow name="amqpFlow2" doc:id="110bcb63-eb21-4072-8d1d-c014adc0772c" initialState="stopped">
+		<http:listener doc:name="Listener" doc:id="bf63763f-7a7a-460c-909f-fe466ee13434" config-ref="HTTP_Listener_config:8082" path="amqp-consume"/>
+		<amqp:consume doc:name="Consume" doc:id="3a418171-433f-4aec-bc0d-a36d4a13abd1" queueName="amqp-q" config-ref="AMQP_Config" contentType="application/json"/>
+		<logger level="INFO" doc:name="Logger" doc:id="968e63fe-2d11-4400-aa3a-059f73fc8115" message="#[payload]" category="CONSUME"/>
+	</flow>
+	<flow name="amqpFlow3" doc:id="578cafaf-8fdc-4c93-b81e-dd88718c3ed6" >
+		<http:listener doc:name="Listener" doc:id="88ead318-3640-4259-8461-8b27f74e3e6e" config-ref="HTTP_Listener_config:8081" path="amqp-pc"/>
+		<amqp:publish-consume doc:name="Publish consume" doc:id="47a1e1a7-4c65-4722-ab08-de164cb9fa18" config-ref="AMQP_Config" exchangeName="amqp-x" contentType="application/json" routingKey="amqp-key">
+			<amqp:message >
+				<amqp:body ><![CDATA[#[output application/json --- {"op": "AMQP Publish Consume"}]]]></amqp:body>
+				<amqp:properties replyTo="amqp-r-q"/>
+			</amqp:message>
+		</amqp:publish-consume>
+		<logger level="INFO" doc:name="Logger" doc:id="efc97756-d1e1-4636-858c-4ee09ea365d6" message="#[payload]"/>
+	</flow>
+</mule>

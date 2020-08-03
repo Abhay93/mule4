@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<oauth2-provider:config name="OAuth2_Provider_Config" doc:name="OAuth2 Provider Config" doc:id="25d05ff0-87f0-4ff0-baeb-199c9e2cd824" providerName="Oauth2 Provider" listenerConfig="HTTP_Listener_config:8081" supportedGrantTypes="CLIENT_CREDENTIALS" clientStore="Client_Store">
+	</oauth2-provider:config>
+	<os:object-store name="Client_Store" doc:name="Object store" doc:id="ed04f01e-e6a6-412a-baef-5280f55db08f" />
+	<os:object-store name="Token_Store" doc:name="Object store" doc:id="36844e6f-023b-4c9d-8c59-4d082f5677f6" />
+	<flow name="oauthFlow" doc:id="80c208be-b127-4be9-9299-9150ad364124" >
+		<http:listener doc:name="Listener" doc:id="a05f78dd-b602-4e9f-950f-d14a0341c3e9" config-ref="HTTP_Listener_config:8081" path="/create"/>
+		<oauth2-provider:create-client doc:name="Create client" doc:id="c89344d3-3088-4d2d-9a1f-c675e268174a" config-ref="OAuth2_Provider_Config" clientId="#[payload.client_id]" secret="#[payload.client_secret]" clientName="#[payload.client_name]" failIfPresent="true" authorizedGrantTypes="#[payload.grant_type]" description="Create client"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5619de5f-4802-4dfd-9ac4-fb70d8f641c9" message="Client Created Successfully"/>
+	</flow>
+</mule>

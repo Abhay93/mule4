@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/product"
+	xmlns:pro="http://www.example.org/product" elementFormDefault="qualified">
+	<complexType name="productType">
+		<sequence>
+			<element name="name">
+				<simpleType>
+					<restriction base="string">
+						<minLength value="5" />
+						<maxLength value="20" />
+					</restriction>
+				</simpleType>
+			</element>
+			<element ref="pro:id"></element>
+		</sequence>
+	</complexType>
+	<element name="id" type="integer" />
+	<element name="product" type="pro:productType" />
+</schema>

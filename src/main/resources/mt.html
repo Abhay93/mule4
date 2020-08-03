@@ -1,0 +1,309 @@
+<section>
+	<div>
+		Mule provides a pre-defined set of policies beforehand, but in some
+		cases it might be required to create a custom one for some reason. The
+		process is a 3 step workflow
+		<ul class="post-list">
+			<li>Developing the policy</li>
+			<li>Deploying/Uploading the policy to exchange</li>
+			<li>Applying the policy on API</li>
+		</ul>
+	</div>
+</section>
+<section>
+	<div>
+		<h3>Setting up and creating the project</h3>
+		Before diving into the development, setup the Maven to create the
+		project structure required.<br> In
+		<mark>settings.xml</mark>
+		, under
+		<mark>profiles</mark>
+		section, add the below profile.
+		<pre>
+			<code class="post-code language-markup">
+&lt;profile>
+	&lt;id>archetype-repository&lt;/id>
+	&lt;repositories>
+		&lt;repository>
+			&lt;id>archetype&lt;/id>
+			&lt;name>Mule
+				Repository
+			&lt;/name>
+			&lt;url>https://repository-master.mulesoft.org/nexus/content/repositories/public
+			&lt;/url>
+			&lt;releases>
+				&lt;enabled>true&lt;/enabled>
+				&lt;checksumPolicy>fail&lt;/checksumPolicy>
+			&lt;/releases>
+			&lt;snapshots>
+				&lt;enabled>true&lt;/enabled>
+				&lt;checksumPolicy>warn&lt;/checksumPolicy>
+			&lt;/snapshots>
+		&lt;/repository>
+	&lt;/repositories>
+&lt;/profile></code>
+		</pre>
+		It adds the Maven archetype required to create the required project
+		structure to for custom policy application(s). To create the project,
+		run the following command
+		<pre>
+			<code class="post-code">
+mvn -Parchetype-repository archetype:generate -DarchetypeGroupId=org.mule.tools -DarchetypeArtifactId=api-gateway-custom-policy-archetype -DarchetypeVersion=1.1.0 -DgroupId=&lt;groupID> -DartifactId=%lt;artifactID> -Dversion=1.0.0-SNAPSHOT -Dpackage=mule-policy</code>
+		</pre>
+		It will create a structure as follows
+		<pre>
+			<code class="post-code">
+custom-policy #corresponds to the artifactID given in maven command
+--src
+  --main
+    --mule
+      template.xml
+--custom-policy.yaml	#same as project name
+--mule-artifact.json
+--pom.xml</code>
+		</pre>
+		<table class="table table-striped post-table">
+			<tr>
+				<th>File</th>
+				<th>Description</th>
+			</tr>
+			<tr>
+				<th>template.xml</th>
+				<td>Defines the policy implementation logic.</td>
+			</tr>
+			<tr>
+				<th>custom-polciy.yaml</th>
+				<td>Defines the policy metadata and configurable parameters.
+					Used to render the UI.</td>
+			</tr>
+			<tr>
+				<th>pom.xml</th>
+				<td>Contains the plugins, dependencies required by the project.
+					Defines the <mark>distributionManagement</mark> tag to tell maven
+					where to upload the JAR.
+				</td>
+			</tr>
+			<tr>
+				<th>mule-artifact.xml</th>
+				<td></td>
+			</tr>
+		</table>
+		<br>To upload the application to the exchange, add the Exchange
+		credentials in
+		<mark>settings.xml</mark>
+		<pre>
+			<code class="language-markup post-code">
+&lt;server>
+   &lt;id>&lt;-server&lt;/id>
+   &lt;username>username&lt;/username>
+   &lt;password>password&lt;/password>
+&lt;/server></code>
+		</pre>
+	</div>
+</section>
+<section>
+	<div>
+		<h3>Developing the policy</h3>
+		<h4>
+			<b>YAML Configuration File</b>
+		</h4>
+		<pre>
+			<code class="post-code">
+id: Custom Policy ID					#Policy ID
+name: Custom Policy						#Policy Name displayed on API Manager's UI
+description: Testing Custom Policy		#Policy Description to be shown on API Manager's UI
+category: Custom						#Policy Category, used to filter policies
+type: custom
+resourceLevelSupported: true			#Decides if the policy can be applied at resource level also
+encryptionSupported: false
+standalone: true
+requiredCharacteristics: []
+providedCharacteristics: [Client ID Required]
+configuration:							#Contains array of Policy Parameters to be provided by user when applying policy.
+- propertyName: String Property			#Unique name of property
+  name: String Property					#Name to be displayed on API Manager's UI
+  description: Property Description		#Description of the property. Displayed on API Manager's UI
+  type: string							#Property Type
+  optional: true						#Whether property is mandatory or not
+  defaultValue: This is default			#Default value to be used when no value is provided by user
+  sensitive: false						#Whether the property will be masked in the UI or not
+  allowMultiple: true					#If multiple values are supported or not</code>
+		</pre>
+		Configurable properties can be of different types like
+		<ul class="post-list">
+			<li><b>Expression</b> A Dataweave expression<pre>
+					<code class="post-code">
+- propertyName: Expression Property
+  name: Expression Property
+  description: Property Description
+  type: expression
+  optional: true
+  sensitive: false</code>
+				</pre> An <mark>expression</mark> type property can't have multiple
+				values.</li>
+			<li><b>Boolean</b> <pre>
+					<code class="post-code">
+- propertyName: Boolean Property
+  name: Boolean Property
+  description: Property Description
+  type: boolean
+  optional: true
+  defaultValue: true
+  allowMultiple: false</code>
+			</pre></li>
+			<li><b>Radio Button</b> <pre>
+					<code class="post-code">
+- propertyName: Radio Buttons
+  name: Radio Buttons
+  description: Property Description
+  type: radio
+  options:					#Defines radio button group
+  - name: Option1
+    value: Option1 value
+  - name: Option2
+    value: Option2 value
+  optional: true
+  sensitive: false</code>
+			</pre></li>
+			<li><b>Integer</b> <pre>
+					<code class="post-code">
+- propertyName: Int Property
+  name: Int Property
+  description: Property Description
+  type: int
+  minimumValue: 10				#Maximum value of the property
+  maximumValue: 20				#Minimum value of the property
+  optional: true
+  sensitive: false
+  allowMultiple: false</code>
+			</pre></li>
+		</ul>
+		<h4>
+			<b>Implementation File</b>
+		</h4>
+		The file contains the logic/instructions to execute the policy. The
+		policy definition starts with
+		<mark>http:policy-proxy</mark>
+		element. This element can have 2 child elements.
+		<ul class="post-code">
+			<li><b>http-policy:source</b> This block can be called as
+				inbound polices block, as it contains instructions for the policy to
+				execute before the flow starts and after the flow finishes.
+			<li>
+			<li><b>http-policy:operation</b> The instructions defined in
+				this block applies to any HTTP Requester within the flow.
+			<li>
+		</ul>
+		<h4>
+			<b>Anatomy of <mark>http-policy:source</mark> element
+			</b>
+		</h4>
+		<pre>
+			<code class="post-code language-markup">
+&lt;http-policy:source>
+	&lt;logger message="Started Policy execution" />		&lt;Logger 1-->
+	&lt;http-policy:execute-next />
+	&lt;logger message="Completed Policy execution" />      &lt;Logger 2-->
+&lt;/http-policy:source></code>
+			</pre>
+		Logger 1 will be executed before the application flow is called by
+		<mark>http-policy:execute-next</mark>
+		element. Once the flow completed, logger 2 is executed before the
+		response is returned to the client. <br>The execution will be <b>Logger
+			1 > Flow > Logger 2</b>
+		<h4>
+			<b>Error Handling</b>
+		</h4>
+		A policy implementation can have its own error handler. The concepts
+		and error flow will be same as in an application. Consider the below
+		scenario where Policy throws an exception before application is
+		called.
+		<pre>
+			<code class="post-code language-markup">
+&lt;http-policy:source>
+	&lt;logger message="Started Policy execution" />		&lt;Logger 1-->
+	&lt;raise-error type="ANY" description="Raised error">
+	&lt;http-policy:execute-next />
+	&lt;logger message="Completed Policy execution" />      &lt;Logger 2-->
+&lt;/http-policy:source></code>
+		</pre>
+		Logger 1 is executed and then error is raised, since there is no error
+		handler, default will be called and the execution stops.
+		<pre>
+			<code class="post-code">
+Logger 1 > Error >Default error handler or Policy Error Handler (if configured)</code>
+			</pre>
+		Policy implementation with error handler
+		<pre>
+			<code class="post-code language-markup">
+&lt;http-policy:source>
+	&lt;logger message="Started Policy execution" />
+	&lt;http-policy:execute-next />
+	&lt;logger message="Completed Policy execution" />
+	&lt;error-handler>
+		&lt;on-error-continue>
+			&lt;logger message="Caught Error" />
+		&lt;/on-error-continue>
+	&lt;/error-handler>
+&lt;/http-policy:source></code>
+			</pre>
+		<h4>
+			<b>Payload propagation</b>
+		</h4>
+		Payload is propagated differently by
+		<mark>http-policy:source</mark>
+		and
+		<mark>http-policy:operation</mark>
+		.<br> In
+		<mark>http-policy:source</mark>
+		depending on if payload is changed before
+		<mark>http-policy:execute-next</mark>
+		, changes will not be propagated to the application. But if changed
+		after
+		<mark>http-policy:execute-next</mark>
+		, the changes will be propagated.However, changes to the payload
+		before
+		<mark>http-policy:execute-next</mark>
+		can be propagated to the flow by setting
+		<mark>propagateMessageTransformations</mark>
+		to true.
+		<pre>
+			<code class="post-code language-markup"> 
+&lt;http-policy:source propagateMessageTransformations="true"> 
+	&lt;logger message="Started Policy execution" /> 		&lt;Logger 1--> 
+	&lt;set-payload value="Hello World!" /> 
+	&lt;http-policy:execute-next /> 						
+	&lt;logger message="Completed Policy execution" /> 		&lt;Logger 2-->
+	&lt;set-payload value="Bye World!" /> 
+&lt;/http-policy:source></code>
+		</pre>
+		<h4>
+			<b>Accessing the configurable Parameters</b>
+		</h4>
+		The configurable parameters can be accessed in XML using handlebars
+		<mark>{{{}}}</mark>
+		. Consider the below configurable parameter
+		<pre>
+			<code class="post-code"> 
+- propertyName: Expression Property
+ name: Expression Property 
+ description: Property Description 
+ type:expression 
+ optional: true 
+ sensitive: false</code>
+		</pre>
+		It can be accessed in XML using the <b>propertyName</b> within
+		handlebars,
+		<code>{{{Expression Property}}}</code>
+		.
+	</div>
+</section>
+<section>
+	<div>
+		<h3>Uploading the policy to exchange</h3>
+		To upload the policy to exchange, run
+		<code> mvn deploy</code>
+		from the directory. To upload newer version of policy, change
+		the version in pom and upload.
+	</div>
+</section>

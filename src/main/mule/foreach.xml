@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="foreachFlow" doc:id="f3d1e964-5816-41a4-be9c-4b414ec294a4">
+		<http:listener doc:name="Listener"
+			doc:id="40a9f7df-aeac-4c9e-8b47-52cc29ca766a" config-ref="HTTP_Listener_config:8081"
+			path="/fe" />
+		<set-payload
+			value='#[%dw 2.0
+output application/json
+---
+[{"name":"John", "age":25}, {"name":"Jane", "age":26}]]'
+			doc:name="Set Payload" doc:id="f750ec05-fda3-4b06-ab73-61cd61b10765" />
+		<set-variable value="#[30]" doc:name="Set Variable" doc:id="e6f7b6cf-f93c-447b-971a-50c65b270ebd" variableName="age"/>
+		<foreach doc:name="For Each" doc:id="2e75345d-f1f4-4421-a317-924151496329">
+			<logger level="INFO" doc:name="Logger"
+				doc:id="a4c0f0f1-2cba-4c5f-946f-9cdb1175a15a" message='#[payload]' />
+			<set-variable value="#[payload.name]" doc:name="Set Variable" doc:id="fcf2daba-d284-4b94-ab28-69dfc4b328b2" variableName="name"/>
+			<set-variable value="#[payload.age]" doc:name="Set Variable" doc:id="1fa85b32-1818-4823-ab47-f4f9296ed230" variableName="age"/>
+			<set-payload value="#[123]" doc:name="Set Payload" doc:id="27691f72-a99b-42ba-81d4-298312eb3786" />
+		
+</foreach>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="9965b218-1af4-4f8b-b9ea-a271c44b065a" message="payload=#[payload], name=#[vars.name], age=#[vars.age]" />
+</flow>
+</mule>

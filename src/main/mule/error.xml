@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="errorFlow" doc:id="ae87cd09-513c-424c-b6e6-4067fb63d944">
+		<http:listener doc:name="Listener"
+			doc:id="a344e8a8-883d-4b7b-9be1-33be04186e5e" config-ref="HTTP_Listener_config:8081"
+			path="/error" />
+			<scripting:execute doc:name="Throw Exception" doc:id="2e479942-3adb-4d24-af66-98b5dabd98ea" engine="groovy">
+			<error-mapping sourceType="SCRIPTING:EXECUTION" targetType="COMPONENT1:EXECUTION" />
+			<scripting:code>throw new IllegalArgumentException();
+			</scripting:code>
+		</scripting:execute>
+			
+		<scripting:execute engine="groovy" doc:name="Throw Exception" doc:id="9579816e-92b0-42e6-bb89-b7762d4756ed" >
+			<error-mapping sourceType="SCRIPTING:EXECUTION" targetType="COMPONENT2:EXECUTION" />
+			<scripting:code >throw new IllegalArgumentException();</scripting:code>
+		</scripting:execute>
+		<logger level="INFO" doc:name="Log Payload"
+			doc:id="b11a6548-3172-48a0-b477-f55f265e3d83" message='#["Payload::" ++ payload]' />
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3c5447a2-2610-4e03-bbc0-108dd2cf346c" >
+				<logger level="INFO" doc:name="Logger" doc:id="ad903693-a669-49e4-bce2-fc005e5a2829" message='#["Description:: " ++ error.description]'/>
+			</on-error-continue>
+		</error-handler>
+<!-- 		<error-handler> -->
+<!-- 			<on-error-continue enableNotifications="true" -->
+<!-- 				logException="true" doc:name="On Error Continue" doc:id="705f9932-cfaa-4997-bdad-8aad1569f7b6" -->
+<!-- 				type="ANY"> -->
+<!-- 				<logger level="INFO" doc:name="Logger" -->
+<!-- 					doc:id="2cdc3475-d978-40f3-9c24-70d9fe641bd3" message="ANY" /> -->
+<!-- 			</on-error-continue> -->
+<!-- 			<on-error-continue enableNotifications="true" -->
+<!-- 				logException="true" doc:name="On Error Continue" doc:id="2285443b-7be0-4b28-b896-b962bdb62e27" -->
+<!-- 				type="SCRIPTING:UNKNOWN_ENGINE, STREAM_MAXIMUM_SIZE_EXCEEDED"> -->
+<!-- 				<logger level="INFO" doc:name="Caught Error" -->
+<!-- 					doc:id="ab980021-642d-4301-8505-272851284fc7" message="NOT SCRIPTING" /> -->
+<!-- 			</on-error-continue> -->
+<!-- 			<on-error-continue enableNotifications="true" -->
+<!-- 				logException="true" doc:name="On Error Continue" doc:id="b5282bad-1f40-4d7f-a390-19db80eb0a6d" -->
+<!-- 				type="SCRIPTING:EXECUTION"> -->
+<!-- 				<logger level="INFO" doc:name="Caught Error" -->
+<!-- 					doc:id="db3ae4a0-ee40-44bf-859c-41e3d08b09bd" message="Caught SCRIPTING" /> -->
+<!-- 			</on-error-continue> -->
+
+
+<!-- 		</error-handler> -->
+	</flow>
+</mule>

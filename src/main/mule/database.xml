@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<db:config name="Database_Config1" doc:name="Database Config" doc:id="261a2df8-5e7e-4a6d-a090-4763282740ba" >
+		<db:generic-connection url="jdbc:mysql://localhost:3306/demo" driverClassName="com.mysql.jdbc.Driver" user="root" password="128125" />
+	</db:config>
+	<flow name="selectFlow" doc:id="73a56d55-1e81-4297-b4b6-9713587f626c">
+		<http:listener doc:name="Listener"
+			doc:id="e9f9a673-35a0-4797-a519-46419f3a7683" config-ref="HTTP_Listener_config:8081"
+			path="/select" allowedMethods="GET"/>
+		<db:select doc:name="Select" doc:id="794323a5-bf1c-4c30-ae15-bd0a46b48697" config-ref="MySQL_Database_Config">
+			<db:sql ><![CDATA[SELECT * from Employee;]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="0106949c-5ed9-46e6-ad77-48d1b530f5dd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ((employee, index) -> {
+	id: employee.id,
+	firstName: employee.firstname,
+	lastName: employee.lastname,
+	phone: employee.phone,
+	DOB: employee.dateofbirth
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="89c2bda7-5eb6-4aa0-9c87-67be03698b9b" message="Select flow completed"/>
+	</flow>
+	<flow name="ddlFlow" doc:id="df33ab7b-14dd-40d6-ae22-544186f877eb" >
+		<http:listener doc:name="Listener" doc:id="b261165f-7e5e-4184-93a1-e1d0be6accae" config-ref="HTTP_Listener_config:8081" path="/ddl"/>
+		<db:execute-ddl doc:name="Execute DDL" doc:id="9d92062b-ab16-4e0c-a49f-e8db6f4201e4" config-ref="MySQL_Database_Config">
+			<db:sql ><![CDATA[create table student (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(20), age INT, GENDER VARCHAR(1))]]></db:sql>
+		</db:execute-ddl>
+		<logger level="INFO" doc:name="Logger" doc:id="d119d6b7-5dee-44e9-af0f-6cb89a8b929a" message="#[output application/json
+---
+payload]"/>
+	</flow>
+	<flow name="databaseFlow" doc:id="8373e382-1514-42a5-b10c-786335885e5d" initialState="stopped">
+		<db:listener table="employee" doc:name="On Table Row" doc:id="6d459900-7435-4c28-9c9b-1f1d60919657" config-ref="MySQL_Database_Config" watermarkColumn="firstname" idColumn="firstname">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+		</db:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="064678fd-05ba-45c8-96e7-86b8ceab2c17" message="ON TABLE STARTED"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7f84c9a8-212f-404e-90e4-1def913ea94a" message="#[output application/json
+---
+payload]"/>
+	</flow>
+	<flow name="insertFlow" doc:id="c3704b63-e469-4fcf-a05c-c0211c30f01e" >
+		<http:listener doc:name="Listener" doc:id="5632c83a-4786-4fa3-8834-61ed8076c9fe" config-ref="HTTP_Listener_config:8081" path="/insertdb" allowedMethods="POST"/>
+		<db:insert doc:name="Insert" doc:id="76eda6ad-d9fb-4590-9a00-0c0ba0793ec0" config-ref="MySQL_Database_Config">
+			<db:sql ><![CDATA[INSERT INTO employee(firstname, lastname,phone, dateofbirth) VALUES (:firstname, :lastname, :phone, :dob);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	firstname: payload.firstname,
+	lastname: payload.lastname,
+	phone: payload.phone,
+	dob: payload.dob
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="107076a7-c6e8-44de-a573-09e7df36bf53" message="Insertion Completed"/>
+	</flow>
+	<flow name="deleteFlow" doc:id="ac433b02-d1a9-40e0-a178-04fbc25a7156" >
+		<http:listener doc:name="Listener" doc:id="21d7e3c7-03d0-4525-93b2-956f3739d34e" config-ref="HTTP_Listener_config:8081" path="/deleteemp" allowedMethods="DELETE"/>
+		<db:delete doc:name="Delete" doc:id="a712b8c9-ff84-45c8-b4ee-82a69bc2f5c9" config-ref="MySQL_Database_Config">
+			<db:sql ><![CDATA[DELETE FROM employee where id=:id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[id: attributes.queryParams.id]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="16c58ad4-d2c9-496f-9090-58582649e8bb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(payload==1) "Record Deleted Successfully" else "Deletion failed"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b06976ee-874e-4031-ba05-a5a3e202f735" message="Deletion Completed"/>
+	</flow>
+	<flow name="updateFlow" doc:id="674caef0-459c-4e8d-9836-46f7bd6ae3f7" >
+		<http:listener doc:name="Listener" doc:id="e1ac592b-fd5b-4c09-8297-f17fff11d2e9" config-ref="HTTP_Listener_config:8081" path="/update"/>
+		<db:update doc:name="Update" doc:id="b33432c7-749b-4bdc-a2be-837cdddc4dc9" config-ref="MySQL_Database_Config">
+			<db:sql ><![CDATA[UPDATE employee set phone=:phone where id=:id;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	phone: attributes.queryParams.phone,
+	id: attributes.queryParams.id
+}]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="Transform Message" doc:id="dc5c7da3-8b86-4c5f-837e-d6aa71dc5ff9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(payload.affectedRows>0) "Update Successfull" else "Update failed"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b3c7e069-6dad-406f-9fdb-6ebb14cffb73" message="Update Flow Completed"/>
+	</flow>
+</mule>

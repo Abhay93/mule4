@@ -1,0 +1,3 @@
+{"firstName":#[attributes.queryParams.'first_name'],
+"lastName":#[attributes.queryParams.'last_name']
+}

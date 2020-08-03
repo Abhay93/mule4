@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="batchFlow" doc:id="764d733a-1375-4532-84e7-c2a6447e0bf3">
+		<http:listener doc:name="Listener"
+			doc:id="16013f0a-3e84-40a0-82db-785c0ad9b006" config-ref="HTTP_Listener_config:8081"
+			path="/batch" />
+		<logger level="INFO" doc:name="Logger"
+			doc:id="b52c7dc7-326d-45ac-b65f-796d781968b9" message="Started Batch"
+			category="NORMAL" />
+		<set-payload value='#[output application/json
+---
+[{
+	firstName: "John",
+	lastName: "Doe",
+	dob: "1993-05-23" as String {format: "yyyy-MM-dd"},
+	age: 26,
+	gender: 1	
+},
+{
+	firstName: "Jane",
+	lastName: "Doe",
+	dob: "1993-07-28" as String {format: "yyyy-MM-dd"},
+	age: 26,
+	gender: 0	
+},
+{
+	firstName: "Joe",
+	lastName: "Doe",
+	dob: "1995-10-02" as String {format: "yyyy-MM-dd"},
+	age: 24,
+	gender: 1	
+},
+{
+	firstName: "John",
+	lastName: "Smith",
+	dob: "1991-01-17" as String {format: "yyyy-MM-dd"},
+	age: 29,
+	gender: 1	
+},
+{
+	firstName: "Kate",
+	lastName: "Smith",
+	dob: "1996-05-11" as String {format: "yyyy-MM-dd"},
+	age: 23,
+	gender: 0	
+}]]' doc:name="Set Payload"
+			doc:id="0d27edde-30ac-4385-8cde-0695e4652fd7" />
+		<batch:job jobName="batchBatch_Job" doc:id="005541fb-7fcc-4906-9506-3cd27b06f5aa" blockSize="3" maxFailedRecords="2">
+			<batch:process-records>
+				<batch:step name="ALL" doc:id="ee9adb15-9659-42ef-b8aa-b21cd974ee96">
+					<logger level="INFO" doc:name="Logger"
+						doc:id="1529529e-3149-44c9-97f7-ee53b71008a0" category="BATCH-LOGS-ALL"
+						message="Started Batch" />
+					<logger level="INFO" doc:name="Logger" doc:id="3734bae3-4bc5-4e0e-9f8c-57c26be8ec15" message="#[payload]" category="BATCH-LOGS-ALL"/>
+					<set-variable value='#[payload.firstName ++ " " ++ payload.lastName]' doc:name="Set Variable" doc:id="428cde5f-2d20-4a1d-86cc-7d2dd4350ea0" variableName="username"/>
+					<logger level="INFO" doc:name="Logger" doc:id="83aff8d7-b44c-41ce-a3fe-7f82ada0e74f" message="#[vars.username]" category="BATCH-LOGS-ALL"/>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="e00b6a59-ef22-49e1-b736-749ace26214a" size="2">
+						<logger level="INFO" doc:name="Logger" doc:id="7726c50c-fddd-4e17-a073-78e5f4f66158" category="BATCH-LOGS-ALL-AGG" message="#[payload]"/>
+					</batch:aggregator>
+<!-- 					<choice doc:name="Choice" doc:id="127acab6-c9df-4097-bbf7-1f8b6a0c1ac8" > -->
+<!-- 						<when expression="#[payload.gender == 0]"> -->
+<!-- 							<raise-error doc:name="Raise error" doc:id="3caec7b4-ba9d-44e8-b66b-c19288ecf2f1" type="ANY" description="FEMALE FOUND!!!!" /> -->
+<!-- 						</when> -->
+<!-- 						<otherwise > -->
+<!-- 							<logger level="INFO" doc:name="Logger" doc:id="e920f33e-e80d-47c8-829d-7c46388a27ab" message="Same old men (((" category="BATCH-LOGS-STEP1"/> -->
+<!-- 						</otherwise> -->
+<!-- 					</choice> -->
+				</batch:step>
+				<batch:step name="OnlyFemale" doc:id="05332e98-6272-4555-9507-0d90aded110f" acceptExpression="#[payload.gender == 0]">
+					<logger level="INFO" doc:name="Logger" doc:id="5294d67e-5afc-4595-bb3e-ebe5f7504fff" category="BATCH-LOGS-OF" message="#[vars.username]"/>
+					<raise-error doc:name="Raise error" doc:id="1c6d09ce-22eb-4122-bafd-8b1f44210801" type="ANY" description="Feamle found"/>
+				</batch:step>
+				<batch:step name="OnlyFailures" doc:id="cc7dc144-7a5a-43a8-9b10-4604ec143656" acceptPolicy="ONLY_FAILURES">
+					<logger level="INFO" doc:name="Logger" doc:id="757cdf45-fdc5-4b59-869d-e1ba89b9ac06" category="BATCH-LOGS-FAILURE" message="#[payload]"/>
+					<logger level="INFO" doc:name="Logger" doc:id="05b18231-55c5-4f1c-b52b-a7b4e5fb60c0" category="BATCH-LOGS-FAILURE" message="vars.username"/>
+				</batch:step>
+				<batch:step name="NoFailures" doc:id="384579b2-d7ec-4980-9ded-6703e6d19c99" >
+					<logger level="INFO" doc:name="Logger" doc:id="0686b0d9-e507-4435-9a80-2291af84f9d2" category="BATCH-LOGS-NOFAILURE" message="#[payload]"/>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete>
+				<logger level="INFO" doc:name="Logger" doc:id="50c4258e-5d84-4d69-8687-04ab6853b4ba" category="BATCH-LOGS-COMPLETED" message="#[output application/json
+---
+payload]"/>
+			</batch:on-complete>
+		</batch:job>
+		<logger level="INFO" doc:name="Logger"
+			doc:id="84f8eb5f-4df7-4995-98b8-fdec3b0d106e" message="Outside Batch- Flow Completed"
+			category="NORMAL" />
+	</flow>
+</mule>

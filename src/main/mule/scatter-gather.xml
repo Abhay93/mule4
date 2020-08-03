@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="sgFlow" doc:id="5e336e78-06fa-4254-af9c-b004cbfcdbe3" >
+		<http:listener doc:name="Listener" doc:id="b2227072-3117-4a98-a765-3292fb305aa0" config-ref="HTTP_Listener_config:8081" path="/sg"/>
+		<set-variable value="value" doc:name="create Var" doc:id="e878a332-93b4-4642-a5be-0d135bb58720" variableName="var"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="d7bcafc3-7e8a-488c-b74c-7c5dc065e645" target="scatterGatherVar" maxConcurrency="1">
+			<route >
+				<logger level="INFO" doc:name="Route1" doc:id="8e63932c-fc15-4bea-a085-8b32f4d77474" message="Route1"/>
+				<raise-error doc:name="Raise error" doc:id="91246abb-0537-40ca-9889-04f4caa13059" type="ANY" description="MYERROR"/>
+				<set-variable value="value1" doc:name="create var1" doc:id="8cbbe05b-340c-4c3b-8135-3564af006e40" variableName="var1"/>
+				<set-variable value="newValue1" doc:name="update var" doc:id="75235c03-9ef8-4f7f-8096-22ca42769e00" variableName="var"/>
+				<set-payload value="Route1" doc:name="Set Payload" doc:id="f5f31fdd-a9cb-4a02-a348-2bfaaf4d1b36" />
+<!-- 				<logger level="INFO" doc:name="Logger" doc:id="ee882501-d7bb-4131-ba8c-7c99769f2948" /> -->
+			</route>
+			<route >
+				<logger level="INFO" doc:name="Route2" doc:id="15aef6b8-cf01-43e8-a179-1018a968b0f8" message="Route2"/>
+				<set-variable value="value2" doc:name="create var2" doc:id="6a38f7cc-3228-4229-b261-cc7357f5ec11" variableName="var2"/>
+				<set-variable value="newValue2" doc:name="update var" doc:id="2beabbef-a2b0-4024-99bb-7864c2452297" variableName="var"/>
+				<set-payload value="Route2" doc:name="Set Payload" doc:id="c6d45fec-6d7c-4ef7-920b-0e24bcbc4334" />
+<!-- 				<logger level="INFO" doc:name="Logger" doc:id="7d82d4ce-aba6-482a-b4bb-99c34177fd81" /> -->
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="Log Payload" doc:id="18d92751-6f19-4267-8ce1-5c5dd082a779" message="#[vars]"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="1bcb6ce6-4d23-4942-a2b7-181f5a638767" >
+				<logger level="INFO" doc:name="Logger" doc:id="ed459d72-9ef2-4ca1-af95-42d947604453" message="Caugh Error"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
