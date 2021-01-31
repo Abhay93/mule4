@@ -7,13 +7,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<http:request-config
-		name="HTTP_Request_configuration_Bitly"
-		doc:name="HTTP Request configuration"
-		doc:id="585d5294-f89e-40fd-a501-8cddef20f4ba">
-		<http:request-connection protocol="HTTPS"
-			host="api-ssl.bitly.com" />
-	</http:request-config>
 	<flow name="bitlyFlow"
 		doc:id="783babb2-26d3-40b9-835b-416fc9d4457f">
 		<http:listener doc:name="Listener"
@@ -32,6 +25,21 @@ var httpsUrl = "http://vistit.lfg.com"
 	https: substringAfter(httpsUrl, "://")
 }]]></ee:set-payload>
 			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="51ef8cee-f634-4a66-8dad-3377a71d996d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Abhay"]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="newVar" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+			
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="3e0f9e58-8f24-44e9-a78d-93d07c5bc694" message="${app.name}"/>
 		<set-payload value="ASD" doc:name="Set Payload"

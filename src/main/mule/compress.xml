@@ -1,33 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:file="http://www.mulesoft.org/schema/mule/file"
-	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:compression="http://www.mulesoft.org/schema/mule/compression"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<flow name="choiceFlow" doc:id="48d13d5e-deb8-4508-bc37-ca00fab04c6e" >
-		<http:listener doc:name="Listener" doc:id="468e72c6-8a3d-488b-baab-e9f5a712b7c5" config-ref="HTTP_Listener_config:8081" path="/choice"/>
-		<set-variable value="mule4" doc:name="version" doc:id="6666beda-dae8-4a7e-89d9-eafde7fa8c5d" variableName="version"/>
-		<ee:transform doc:name="Transform Message" doc:id="23acb5c9-eb3b-44a0-a70a-90c67b668047" >
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/compression http://www.mulesoft.org/schema/mule/compression/current/mule-compression.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="extractFlow" doc:id="8839be5b-ace9-4866-902d-410193145d25" >
+		<http:listener doc:name="Listener" doc:id="08dd702f-81d6-4be8-8bf4-3d20afd72cac" config-ref="HTTP_Listener_config:8081" path="/extract"/>
+		<file:read doc:name="Read" doc:id="ecf8a6c1-a9fb-402b-aec4-8876b544ec10" config-ref="File_Config" path="apache-tomcat-8.5.54-windows-x64.zip"/>
+		<compression:extract doc:name="Extract" doc:id="b8719cc0-d499-4fdb-9667-7f6fa52f0fa0" >
+			<compression:extractor >
+				<compression:zip-extractor />
+			</compression:extractor>
+		</compression:extract>
+		<foreach doc:name="For Each" doc:id="41af6a47-e3b2-461f-b012-fa6c1416b93e" collection="#[dw::core::Objects::entrySet(payload)]">
+			<choice doc:name="Choice" doc:id="1da101d5-f37b-4083-aee5-de8dcd840768" >
+				<when expression='#[(payload[0] endsWith  "/") as Boolean == false]'>
+					<logger level="INFO" doc:name="Logger" doc:id="d45b8e79-f157-4c73-8bb5-93825e4c6c49" message='#["Writing " ++ payload[0]]' />
+					<file:write doc:name="Write" doc:id="51065292-c9ce-4f44-818c-40662c334cb0" config-ref="File_Config" path="#[payload[0]]">
+				<file:content><![CDATA[#[payload[1]]]]></file:content>
+			</file:write>
+				</when>
+				<otherwise>
+					<try doc:name="Try" doc:id="89a7360f-5ab7-463e-ab3d-c03c5943e93b" >
+						<file:create-directory doc:name="Create directory" doc:id="766aa14c-408c-4c42-9dbe-653cce9ca9c0" config-ref="File_Config" directoryPath="#[payload[0]]" />
+						<error-handler >
+							<on-error-continue enableNotifications="true" logException="false" doc:name="On Error Continue" doc:id="ebb8555a-7d4b-48d7-8580-f72b1a789319" type="FILE:FILE_ALREADY_EXISTS">
+								<logger level="INFO" doc:name="Logger" doc:id="b741abea-91bd-4d9e-8f1e-9955bf51cfc7" message="#[&quot;Directory='&quot; ++ payload[0] ++ &quot;' Already Exists, skipping&quot;]"/>
+							</on-error-continue>
+						</error-handler>
+					</try>
+				</otherwise>
+			</choice>
+		</foreach>
+		<set-payload value='#[output application/json --- "Extraction Complete"]' doc:name="Set Payload" doc:id="c13ce236-91df-460e-84a9-28ab2e64527d" />
+	</flow>
+	<flow name="compressFlow" doc:id="22eec4af-562b-4378-ae12-6f9b6f6387d4" >
+		<http:listener doc:name="Listener" doc:id="867412c6-b302-44f2-9a52-87b159f4ce67" config-ref="HTTP_Listener_config:8081" path="/compress"/>
+		<file:read doc:name="Read" doc:id="ab487c6b-db16-48a2-b51a-9bf25cc02fd4" config-ref="File_Config" path="ojdbc8-19.3.0.0.jar"/>
+		<compression:compress doc:name="Compress" doc:id="553c76d2-080a-4233-9702-3d7961135f46" >
+			<compression:compressor >
+				<compression:zip-compressor />
+			</compression:compressor>
+		</compression:compress>
+		<file:write doc:name="Write" doc:id="8499defe-fee1-4587-99da-079215551d9e" config-ref="File_Config" path="ojdbc8.zip"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d067109f-24b6-420f-8543-4d694bf9eea2" message='Compression Complete'/>
+		<file:read doc:name="Read" doc:id="ff692cd2-80a2-4404-b745-56f00ea9950a" config-ref="File_Config" path="ojdbc8.zip"/>
+		<compression:decompress doc:name="Decompress" doc:id="82685312-df4d-4d5f-a3f6-9887ccbbd0a0" >
+			<compression:decompressor >
+				<compression:zip-decompressor />
+			</compression:decompressor>
+		</compression:decompress>
+		<file:write doc:name="Write" doc:id="fbc41701-4145-43db-b559-4f181e7813a9" config-ref="File_Config" path="ojdbc8-zip.jar"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8de9ddd2-019b-4fe6-b29c-e3b4a4554091" message="Decompression Complete"/>
+		<set-payload value="Compression/Decompression Complete" doc:name="Set Payload" doc:id="4e0e9092-4110-4dc7-a3d7-e53c0ab2fae2" />
+	</flow>
+	<flow name="archiveFlow" doc:id="28db6205-dcbd-4cb8-9087-01a372ebc915" >
+		<http:listener doc:name="Listener" doc:id="64caea2c-9e01-433e-b9d5-6de56fb91c12" config-ref="HTTP_Listener_config:8081" path="/archive"/>
+		<file:list doc:name="List" doc:id="da90cbbf-4a7e-4c13-8b9c-b079375b2cc6" config-ref="File_Config" directoryPath="archiveIt" recursive="true"/>
+		<ee:transform doc:name="Transform Message" doc:id="4ebf2784-f5f4-49d8-a005-5d59e834f99f" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-{
-	version: "${secure::version-secure}",
-	"Secure-version": p('secure::version-secure')
-}]]></ee:set-payload>
+{(payload map (item, index) -> {
+	(item.attributes.path): item.payload
+})}]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="ae1bfa14-30f7-4fb3-b569-5dbc30aff337" message="#[payload]"/>
-		<choice doc:name="Choice" doc:id="2ed9e2b0-d6ec-4e7e-bf74-7353b90c1599" >
-			<when expression="#[vars.version == '${version}']">
-				<logger level="INFO" doc:name="Logger" doc:id="11300350-0b7b-4bcf-9276-18d90c615eb7" message="Mule 4"/>
-			</when>
-			<otherwise >
-				<logger level="INFO" doc:name="Logger" doc:id="143a777c-068d-41c1-bf95-1968d45b528f" message="Mule 3"/>
-			</otherwise>
-		</choice>
+		<compression:archive doc:name="Archive" doc:id="bcd380b2-2ce5-4f37-bf69-3a97f4941d30" >
+			<compression:archiver >
+				<compression:zip-archiver />
+			</compression:archiver>
+		</compression:archive>
+		<file:write doc:name="Write" doc:id="ffb3d7ff-8594-459a-80fe-c51fb51c7de6" config-ref="File_Config" path="archive.zip" />
+		<set-payload value='#[output application/json --- "Archive Complete"]' doc:name="Set Payload" doc:id="b1388bbc-9664-48e8-bb56-c5d0bae84886" />
 	</flow>
 </mule>

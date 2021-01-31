@@ -8,9 +8,6 @@
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<db:config name="Database_Config1" doc:name="Database Config" doc:id="261a2df8-5e7e-4a6d-a090-4763282740ba" >
-		<db:generic-connection url="jdbc:mysql://localhost:3306/demo" driverClassName="com.mysql.jdbc.Driver" user="root" password="128125" />
-	</db:config>
 	<flow name="selectFlow" doc:id="73a56d55-1e81-4297-b4b6-9713587f626c">
 		<http:listener doc:name="Listener"
 			doc:id="e9f9a673-35a0-4797-a519-46419f3a7683" config-ref="HTTP_Listener_config:8081"
@@ -101,5 +98,20 @@ if(payload.affectedRows>0) "Update Successfull" else "Update failed"]]></ee:set-
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="b3c7e069-6dad-406f-9fdb-6ebb14cffb73" message="Update Flow Completed"/>
+	</flow>
+	<flow name="spFlow" doc:id="5c8cadab-b0ad-481d-97c6-16595b57d68c" >
+		<http:listener doc:name="Listener" doc:id="2775d84b-b950-46c9-a6bf-b30243ecac3b" config-ref="HTTP_Listener_config:8081" path="/sp"/>
+		<db:stored-procedure doc:name="Stored procedure" doc:id="279359bf-e4d9-473a-94f4-91b7770577b3" config-ref="MySQL_Database_Config">
+			<db:sql ><![CDATA[{CALL insertGuests(:I_FIRSTNAME, :I_LASTNAME, I_EMAIL,:O_COUNT)}]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"I_FIRSTNAME": "Joe",
+	"I_LASTNAME": "Denly",
+	"I_EMAIL": "j.denly@mail.com"
+}]]]></db:input-parameters>
+			<db:output-parameters >
+				<db:output-parameter key="O_COUNT" type="INTEGER" />
+			</db:output-parameters>
+		</db:stored-procedure>
+		<logger level="INFO" doc:name="Logger" doc:id="68f149ad-53ba-445e-9bbe-6bc7502947ac" category="SPCALL"/>
 	</flow>
 </mule>

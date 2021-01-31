@@ -7,9 +7,6 @@
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<file:config name="File_Config1" doc:name="File Config" doc:id="d92aa5af-256e-4d8d-b211-bfae40be36da" >
-		<file:connection workingDir="D:/file/moved" />
-	</file:config>
 	<flow name="listFiles" doc:id="4ff7cfa2-4ca9-46cf-85b2-8599a5392730">
 		<http:listener doc:name="Listener"
 			doc:id="98b4b6d1-5b0a-4bc6-917a-60b42bef291d" config-ref="HTTP_Listener_config:8081"

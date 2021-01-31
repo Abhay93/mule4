@@ -63,6 +63,209 @@ if(sizeOf("Mule")==4) "Hi! Mule" else "Duh!"
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger"
 			doc:id="09c7deed-12ce-4ef2-be11-30a1a802f228" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="3ede28ec-7095-4a18-a555-35e94de46fd3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml writeDeclaration=false
+var deptHrsSelectResult = [{
+	"DEPARTMENT_TYPE": "Mobile SPS",
+	"STORE_NO": 1001,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "21:00",
+	"DAY_OF_WEEK": "Saturday"
+},{
+	"DEPARTMENT_TYPE": "Mobile SPS",
+	"STORE_NO": 1001,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "09:00",
+	"CLOSE_TIME": "21:00",
+	"DAY_OF_WEEK": "Friday"
+},
+  {
+	"DEPARTMENT_TYPE": "Mobile SPS",
+	"STORE_NO": 1009,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "00:00",
+	"DAY_OF_WEEK": "Sunday"
+},
+  {
+	"DEPARTMENT_TYPE": "Mobile QWE",
+	"STORE_NO": 1009,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "22:00",
+	"DAY_OF_WEEK": "Thursday"
+},
+
+  {
+	"DEPARTMENT_TYPE": "Mobile ASD",
+	"STORE_NO": 1010,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "20:00",
+	"DAY_OF_WEEK": "Saturday"
+},
+  {
+	"DEPARTMENT_TYPE": "Mobile ASD",
+	"STORE_NO": 1009,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "00:00",
+	"DAY_OF_WEEK": "Sunday"
+},
+  {
+	"DEPARTMENT_TYPE": "Mobile ASD",
+	"STORE_NO": 1009,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "00:00",
+	"DAY_OF_WEEK": "Thursday"
+}]
+var deptExpSelectResult = [{
+	"END_DATE": "2013-12-04T00:00:00",
+	"IS_ACTIVE": "Y",
+	"DEPARTMENT_TYPE": "Front End",
+	"STORE_NO": 283,
+	"CLOSE": "23:15",
+	"OPEN": "09:00",
+	"START_DATE": "2013-12-03T00:00:00"
+},
+  {
+	"END_DATE": "2013-12-03T00:00:00",
+	"IS_ACTIVE": "Y",
+	"DEPARTMENT_TYPE": "Sales Floor",
+	"STORE_NO": 283,
+	"CLOSE": "00:00",
+	"OPEN": "10:00",
+	"START_DATE": "2013-12-03T00:00:00"
+},
+  {
+	"END_DATE": "2013-12-04T00:00:00",
+	"IS_ACTIVE": "Y",
+	"DEPARTMENT_TYPE": "Mobile SPS",
+	"STORE_NO": 1001,
+	"CLOSE": "00:00",
+	"OPEN": "09:00",
+	"START_DATE": "2013-12-03T00:00:00"
+},
+{
+	"END_DATE": "2020-12-04T00:00:00",
+	"IS_ACTIVE": "Y",
+	"DEPARTMENT_TYPE": "Mobile SPS",
+	"STORE_NO": 1001,
+	"CLOSE": "21:00",
+	"OPEN": "09:00",
+	"START_DATE": "2017-12-03T00:00:00"
+},  {
+	"END_DATE": "2013-12-04T00:00:00",
+	"IS_ACTIVE": "Y",
+	"DEPARTMENT_TYPE": "Mobile QWE",
+	"STORE_NO": 1009,
+	"CLOSE": "00:00",
+	"OPEN": "09:00",
+	"START_DATE": "2013-12-03T00:00:00"
+}]
+fun getExpCollection(deptValue: Array) = deptExpSelectResult[?($.STORE_NO == deptValue[0].STORE_NO and $.DEPARTMENT_TYPE == deptValue[0].DEPARTMENT_TYPE)]
+---
+{
+	EnterpriseDocument @(InterfaceName: "DepartmentProfileImport", Version: "1.0", CreationTimestamp: (now() as LocalDateTime as String {
+		format:"yyyy-MM-dd'T'hh:mm:ss"
+	}), CreationSource: "Ross Stores Default", ClientID: "1000101", ClientName: "Ross Stores, Inc."): {
+		"DepartmentProfileList": (deptHrsSelectResult groupBy $.STORE_NO mapObject (storeValue, storeKey) -> {
+			(storeValue groupBy $.DEPARTMENT_TYPE mapObject (deptValue, deptKey) -> {
+				DepartmentProfile @(deptExtID: deptKey, buCode: using ( buString = ("0000" ++ deptValue.STORE_NO[0]) ) buString[(sizeOf(buString) - 4) to (sizeOf(buString) - 1)]): {
+					DefaultSchedule @(setting: "TimeSpecific", openTime: "09:00", closeTime: "21:00"): "",
+					WeekdayScheduleList: {
+						(deptValue map (deptItem , deptIndex) -> {
+							WeekdaySchedule @(dayOfTheWeek: deptItem.DAY_OF_WEEK, setting: (if ( deptItem.OPEN_TIME == deptItem.CLOSE_TIME ) "ClosedAllDay" else "TimeSpecific"), (openTime: deptItem.OPEN_TIME) if (deptItem.OPEN_TIME != null and trim(deptItem.OPEN_TIME) != ""), (closeTime: deptItem.CLOSE_TIME) if (deptItem.CLOSE_TIME != null and trim(deptItem.CLOSE_TIME) != "")): ""
+						})
+					},
+					(OverridesList: {
+						(getExpCollection(deptValue) map (expItem, expValue) -> {
+							Overrides @(name: expItem.START_DATE as Date as String {
+								format: "dd/MM/yyyy"
+							} ++ "-" ++ expItem.END_DATE as Date as String {
+								format: "dd/MM/yyyy"
+							} default null, startDate: expItem.START_DATE as Date default null, endDate: expItem.END_DATE as String as Date default null, setting: (if ( expItem.OPEN == expItem.CLOSE ) "ClosedAllDay" else "TimeSpecific"), (openTime: expItem.OPEN) if (expItem.OPEN != null and trim(expItem.OPEN) != ""), (closeTime: expItem.CLOSE) if (expItem.CLOSE != null and trim(expItem.CLOSE) != "")): ""
+						})
+					}) if(getExpCollection(deptValue) != null)
+				}
+			})
+		})
+	}
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="deptHrs" ><![CDATA[%dw 2.0
+output application/xml
+var deptHrsSelectResult = [{
+	"DEPARTMENT_TYPE": "Mobile SPS",
+	"STORE_NO": 1001,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "21:00",
+	"DAY_OF_WEEK": "Saturday"
+},{
+	"DEPARTMENT_TYPE": "Mobile SPS",
+	"STORE_NO": 1001,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "09:00",
+	"CLOSE_TIME": "21:00",
+	"DAY_OF_WEEK": "Friday"
+},
+  {
+	"DEPARTMENT_TYPE": "Mobile SPS",
+	"STORE_NO": 1009,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "00:00",
+	"DAY_OF_WEEK": "Sunday"
+},
+  {
+	"DEPARTMENT_TYPE": "Mobile QWE",
+	"STORE_NO": 1009,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "22:00",
+	"DAY_OF_WEEK": "Thursday"
+},
+
+  {
+	"DEPARTMENT_TYPE": "Mobile ASD",
+	"STORE_NO": 1010,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "20:00",
+	"DAY_OF_WEEK": "Saturday"
+},
+  {
+	"DEPARTMENT_TYPE": "Mobile ASD",
+	"STORE_NO": 1009,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "00:00",
+	"DAY_OF_WEEK": "Sunday"
+},
+  {
+	"DEPARTMENT_TYPE": "Mobile ASD",
+	"STORE_NO": 1009,
+	"CHANGE_FLAG": "N",
+	"OPEN_TIME": "00:00",
+	"CLOSE_TIME": "00:00",
+	"DAY_OF_WEEK": "Thursday"
+}]
+
+---
+deptHrsSelectResult]]></ee:set-variable>
+				<ee:set-variable variableName="testPrinika" ><![CDATA[%dw 2.0
+output application/json
+var data=read('"{asd=das}"', "application/json")
+---
+asd: data]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
 		<error-handler >
 			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="aee49011-70de-44f7-a956-77fa9c4b7337" >
 				<logger level="INFO" doc:name="Logger" doc:id="40c44de4-9794-4277-a266-db6b19a01295" message="#[payload]"/>

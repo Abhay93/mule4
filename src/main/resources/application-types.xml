@@ -9,4 +9,5 @@ type id = {| name: String |} {"example": "{\"name\":\"Swami\"}"}
 ]]></types:shape>
     </types:type>
   </types:catalog>
+  <types:enrichment select="#3ede28ec-7095-4a18-a555-35e94de46fd3"/>
 </types:mule>

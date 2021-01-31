@@ -1,2 +1,6 @@
 version: "mule4"
 id: "123ggvjo7yfc321gviyy5vb"
+endorsements:
+  T: "asd"
+  M: "das"
+  k: "qwe"

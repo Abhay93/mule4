@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	<flow name="sftpReadFlow" doc:id="a1e73598-bad4-4572-804a-21e266830af0" >
+		<http:listener doc:name="Listener" doc:id="edb811b4-8ec0-4c1d-aa2f-41067cbb9ced" config-ref="HTTP_Listener_config:8081" path="/read"/>
+		<sftp:read doc:name="Read" doc:id="9cd59b24-e49b-4868-a165-743b560d5588" config-ref="SFTP_Config" path="/poc/test.txt"/>
+		<logger level="INFO" doc:name="Logger" doc:id="af574710-8988-4748-9d76-bab184afd111" message="#[output application/json --- payload]"/>
+	</flow>
+	<flow name="sftpListFlow" doc:id="83d6653c-e4b2-4e2e-b949-8a42fa06f639" >
+		<http:listener doc:name="Listener" doc:id="733246a0-92ec-4c5a-ae51-4fe941e17e46" config-ref="HTTP_Listener_config:8081" path="/list"/>
+		<sftp:list doc:name="List" doc:id="a84bfade-055a-44e3-b331-2862866264d4" config-ref="SFTP_Config" directoryPath="/poc" recursive="true">
+			<sftp:matcher />
+		</sftp:list>
+		<logger level="INFO" doc:name="Logger" doc:id="7f9a77e1-f2f0-4073-b8d3-58d7d8040108" />
+	</flow>
+	<flow name="sftpFlow1" doc:id="77cd6004-c024-411f-8558-7d892e030f25" >
+		<http:listener doc:name="Listener" doc:id="21a473f7-45f8-45b0-b018-fe27c19db15c" config-ref="HTTP_Listener_config:8081" path="/write"/>
+		<sftp:write doc:name="Write" doc:id="f47a2356-81b4-403f-847e-3364ed1a1426" config-ref="SFTP_Config" path="/demo.json">
+			<sftp:content ><![CDATA[#[{
+	"connector": "SFTP",
+	"operation" : "write"
+}]]]></sftp:content>
+		</sftp:write>
+	</flow>
+	<flow name="sftpFlow2" doc:id="7809dd84-c1b3-4ac3-8df8-9be5d323c4c0" >
+		<sftp:listener doc:name="On New or Updated File" doc:id="782d98c1-1e3c-4096-b2d9-8263114cc7e8" config-ref="SFTP_Config" directory="/poc">
+			<scheduling-strategy >
+				<fixed-frequency timeUnit="SECONDS"/>
+			</scheduling-strategy>
+			<sftp:matcher />
+		</sftp:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="f8cc70b7-2c1b-46d1-b15a-d3bba4b94c38" />
+	</flow>
+	<flow name="sftpFlow" doc:id="9dda04a1-3ee7-41dd-a524-a95d0965af23">
+		<http:listener doc:name="Listener" doc:id="cdbfa663-553d-4c56-86b6-7faa64320ee7" config-ref="HTTP_Listener_config:8081" path="/cp" />
+		<sftp:copy doc:name="Copy" doc:id="e3c8c20b-a344-479d-a9fe-a665150a1322" config-ref="SFTP_Config" sourcePath="/poc/test.txt" targetPath="/poc/New Folder/" overwrite="true" />
+<!-- 		<sftp:move doc:name="Move" doc:id="ba689e10-ea27-41d9-8c49-8446c73f54ab" config-ref="SFTP_Config" sourcePath="/poc/test.txt" targetPath="/poc/New Folder"/> -->
+		<logger level="INFO" doc:name="Logger" doc:id="b6fa1e68-04d4-43eb-8ff9-7ae105b5407b" />
+		<sftp:create-directory doc:name="Create directory" doc:id="14b0515e-a6eb-42a2-9f6b-148e71714702" config-ref="SFTP_Config" directoryPath="/poc/Data" />
+		<sftp:delete doc:name="Delete" doc:id="003f21c5-51d0-41fc-9436-38b98504820e" config-ref="SFTP_Config" path="/poc/Data" />
+		<sftp:rename doc:name="Rename" doc:id="4e414f8b-8b2c-4fa2-85b5-a1ebcf879a1f" config-ref="SFTP_Config" path="/poc/test.txt" to="test-3.txt" />
+	</flow>
+</mule>

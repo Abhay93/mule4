@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:dropbox="http://www.mulesoft.org/schema/mule/dropbox" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/dropbox http://www.mulesoft.org/schema/mule/dropbox/current/mule-dropbox.xsd">
+	<flow name="dropboxFlow" doc:id="2baa7647-1eb6-405b-b863-4de41aae4e04" >
+		<http:listener doc:name="Listener" doc:id="64e9de37-f596-483b-9240-fc613fa62cc5" config-ref="HTTP_Listener_config:8081" path="/dropbox"/>
+		<dropbox:upload-file doc:name="Files: Upload file" doc:id="8de68827-bb8a-4834-a3d0-a07a91aa73d7" config-ref="Dropbox_User_Configuration" path="/muleUploads/demo.json">
+			<dropbox:file-content ><![CDATA[#[{
+	"connector": "dropbox",
+	"op": "upload"
+}]]]></dropbox:file-content>
+		</dropbox:upload-file>
+		<logger level="INFO" doc:name="Logger" doc:id="ba51e1bc-3a89-4edb-8221-fa3a5dbfb4c3" message="Upload done"/>
+	</flow>
+</mule>

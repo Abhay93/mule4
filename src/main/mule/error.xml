@@ -1,23 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
 	xmlns:file="http://www.mulesoft.org/schema/mule/file"
-	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
 	xmlns="http://www.mulesoft.org/schema/mule/core"
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<flow name="errorFlow" doc:id="ae87cd09-513c-424c-b6e6-4067fb63d944">
+	<flow name="errorFlow"
+		doc:id="ae87cd09-513c-424c-b6e6-4067fb63d944">
 		<http:listener doc:name="Listener"
-			doc:id="a344e8a8-883d-4b7b-9be1-33be04186e5e" config-ref="HTTP_Listener_config:8081"
-			path="/error" />
+			doc:id="a344e8a8-883d-4b7b-9be1-33be04186e5e"
+			config-ref="HTTP_Listener_config:8081" path="/error" />
+
+		<flow-ref doc:name="Flow Reference"
+			doc:id="91a92714-d517-496e-90ba-2ff901667406" name="errorFlow1"/>
+		<try doc:name="Try" doc:id="2ce440a1-3f7e-4e10-b738-b27c6a11a87b" >
 			<scripting:execute doc:name="Throw Exception" doc:id="2e479942-3adb-4d24-af66-98b5dabd98ea" engine="groovy">
 			<error-mapping sourceType="SCRIPTING:EXECUTION" targetType="COMPONENT1:EXECUTION" />
 			<scripting:code>throw new IllegalArgumentException();
 			</scripting:code>
 		</scripting:execute>
-			
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="dbde2703-ce13-49a4-be2e-7d21640b0c12" >
+					<set-variable value="Hi" doc:name="Set Variable" doc:id="ec3eaa76-29af-4c01-a781-5a77c138cd7a" variableName="errorVar"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
 		<scripting:execute engine="groovy" doc:name="Throw Exception" doc:id="9579816e-92b0-42e6-bb89-b7762d4756ed" >
 			<error-mapping sourceType="SCRIPTING:EXECUTION" targetType="COMPONENT2:EXECUTION" />
 			<scripting:code >throw new IllegalArgumentException();</scripting:code>
@@ -52,4 +64,10 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 
 <!-- 		</error-handler> -->
 	</flow>
+	<flow name="errorFlow1" doc:id="42c40886-6f8e-4235-8370-c37ee0bc97d5"><scripting:execute doc:name="Throw Exception" doc:id="5a7b7e91-5e11-42c2-9c77-d183f13e494d" engine="groovy">
+			<error-mapping sourceType="SCRIPTING:EXECUTION" targetType="COMPONENT1:EXECUTION" />
+			<scripting:code>throw new IllegalArgumentException();
+			</scripting:code>
+		</scripting:execute></flow>
+	
 </mule>

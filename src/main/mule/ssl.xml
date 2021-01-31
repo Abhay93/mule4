@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<flow name="one-way-sslFlow" doc:id="8fbf429d-8a43-48f8-9744-d2004b826c1f" >
+		<http:listener doc:name="Listener" doc:id="949a2518-9273-4e9d-b1b0-891814be1621" config-ref="HTTP_Listener_config:8081" path="/owssl"/>
+		<http:request method="GET" doc:name="Request" doc:id="28535f51-3434-4a47-a96f-b69938e2b3cf" config-ref="HTTPS_Request_configuration" path="/name/#[attributes.queryParam.name]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e705a742-d701-4c77-9715-ff81139204cc" message="#[payload]"/>
+	</flow>
+</mule>

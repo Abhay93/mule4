@@ -1,0 +1,228 @@
+#%RAML 1.0
+title: libraryAPI
+version: 1
+description: This API is used for getting, adding, deleting books from library.
+#Optional Tags
+#Serves as the base URIs for all resources.
+baseUri: http://localhost:8081
+#Sets the default body type for body of requests and responses. It will be overridden if media-type is defined explicitly for request or response body
+mediaType: application/json
+#Documentation for the API. Can have more than one title/content pair.
+documentation:
+  - title: LibraryAPI
+    content: This example documentation is to give a overview of operations supported by the API
+types: 
+  Book:
+    properties:
+      id: string
+      title: string
+      description: 
+        type: string
+        minLength: 10
+        maxLength: 500
+      ISBN: number
+      genre: string
+      author: string
+      link: string
+  Author:
+    properties: 
+      name: string
+      date-of-birth: string
+      born: string
+      books: string[]
+  AuthorXML:
+    properties:
+      name:
+        type: string
+        xml:
+          attribute: true #flag to indicate if property is an attribute or not
+      Date-of-birth: date-only
+      Born?: string #Optional property
+      Books: 
+        type: Book[] #type of array elements
+        minItems: 1 #minimum number of items in Books array
+        xml:
+          wrapped: true
+/books:
+  description: This resource is used for the operations defined by the HTTP method
+  get:
+    description: Used to get all the books in the library
+    responses:
+      200:
+        description: Successful response
+        body:
+          type: Book[]
+          example: |
+            [
+              {
+                "id": "1",
+                "title": "The Ice Child",
+                "description":"Description of the book ",
+                "ISBN": 9780007518333,
+                "genre": "Crime, Scandinavian",
+                "author": "Camilla Lackberg",
+                "link": "https://www.goodreads.com/book/show/24592009-the-ice-child"
+              },
+              {
+                "id": "2",
+                "title": "No Place To Hide",
+                "description":"Description of the book",
+                "ISBN": 9780345549556,
+                "genre": "Suspense",
+                "author": "Susan Lewis",
+                "link": "https://www.goodreads.com/book/show/25279223-no-place-to-hide"
+              }
+            ]
+      400:
+        body: 
+          example: |
+            {"message": "Exception occured"}
+  post:
+    description: Used to add a new book
+    headers: 
+      userType:
+        description: Identify if the requester is Admin or normal user
+        required: true
+        type: string
+        enum: 
+          - admin
+          - user
+    body: 
+      type: Book
+      example: |
+        {
+          "id": "1",
+          "title": "The Ice Child",
+          "description":"Description of the book ",
+          "ISBN": 9780007518333,
+          "genre": "Crime, Scandinavian",
+          "author": "Camilla Lackberg",
+          "link": "https://www.goodreads.com/book/show/24592009-the-ice-child"
+        }
+    responses: 
+      201:
+        body: 
+          example: |
+            {"Message":"Book Added"}
+  /{bookName}:
+    get:
+      description: Get details about the specified book
+      queryParameters:
+        ISBN:
+          description: ISBN of the book
+          required: true
+          type: number #inline type declaration
+      responses:
+        200:
+          description: Successful response
+          body:
+            type: Book
+            example: |
+              {
+                "id": "1",
+                "title": "The Ice Child",
+                "description":"Description of the book ",
+                "ISBN": 9780007518333,
+                "genre": "Crime, Scandinavian",
+                "author": "Camilla Lackberg",
+                "link": "https://www.goodreads.com/book/show/24592009-the-ice-child"
+              }
+/authors:
+  description: Resource used to get details about the author
+  get:
+    description: Get details about all the authors
+    responses:
+      200:
+        body:
+          type: Author[]
+          example: |
+            [
+              {
+                "name":"Camilla Lackberg",
+                "date-of-birth":"August 30, 1974",
+                "born":"FjallBaka, Sweden",
+                "books": [
+                  "The Ice child",
+                  "The Ice Princess",
+                  "The Hidden Child"
+                ]
+              },
+              {
+                "name":"Susan Lewis",
+                "date-of-birth":"January 1, 1956",
+                "born":"Bristol, The United Kingdom",
+                "books": [
+                  "No Place To Hide",
+                  "No Child Of Mine"                  ]
+              }
+            ]             
+  post:
+    description: Used to add a new Author
+    headers: 
+      userType:
+        description: Identify if the requester is Admin or normal user
+        required: true
+        type: string
+        enum: 
+          - admin
+          - user
+    body: 
+      type: Author
+      example: |
+        {
+          "name":"Camilla Lackberg",
+          "date-of-birth":"August 30, 1974",
+          "born":"FjallBaka, Sweden",
+          "books": [
+            "The Ice child",
+            "The Ice Princess",
+            "The Hidden Child"
+          ]
+         }
+    responses: 
+      201:
+        body: 
+          example: |
+            {"Message":"Author Added"}
+  /{authorName}:
+    get:
+      description: Get author details
+      responses:
+        200:
+          body:
+            type: Author
+            example: |
+              {
+                "name":"Camilla Lackberg",
+                "date-of-birth":"August 30, 1974",
+                "born":"FjallBaka, Sweden",
+                "books": [
+                  "The Ice child",
+                  "The Ice Princess",
+                  "The Hidden Child"
+                ]
+              }
+    /getInXML:
+      get:
+        description: Get author details
+        responses:
+          200:
+            body:
+              application/xml:
+                type: AuthorXML
+                example: |
+                  <AuthorXML name="Camilla Lackberg">
+                    <Date-of-birth>1974-06-30</Date-of-birth>
+                    <Born>FjallBaka, Sweden</Born>
+                    <Books>
+                      <Book>
+                        <id>1</id>
+                        <title>The Ice Child</title>
+                        <description>Description of the book</description>
+                        <ISBN>9780007518333</ISBN>
+                        <genre>Crime, Scandinavian</genre>
+                        <author>Camilla Lackberg</author>
+                        <link></link>
+                      </Book>
+                    </Books>
+                  </AuthorXML>

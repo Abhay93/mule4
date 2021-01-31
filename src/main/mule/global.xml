@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:powershell="http://www.mulesoft.org/schema/mule/powershell"
-xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+<mule xmlns:dropbox="http://www.mulesoft.org/schema/mule/dropbox"
+	xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:powershell="http://www.mulesoft.org/schema/mule/powershell"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
 	xmlns:nexmo-messages-api="http://www.mulesoft.org/schema/mule/nexmo-messages-api"
-	xmlns:nexmo-smsapi="http://www.mulesoft.org/schema/mule/nexmo-smsapi"
-	xmlns:twilio-connector="http://www.mulesoft.org/schema/mule/twilio-connector"
-	xmlns:ldap="http://www.mulesoft.org/schema/mule/ldap" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
-	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
-	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:nexmo-smsapi="http://www.mulesoft.org/schema/mule/nexmo-smsapi" xmlns:twilio-connector="http://www.mulesoft.org/schema/mule/twilio-connector"
+	xmlns:ldap="http://www.mulesoft.org/schema/mule/ldap"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
 	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http"
-	xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
-	xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
-	xsi:schemaLocation="
+	xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd 
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
 http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd 
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd 
@@ -28,7 +32,34 @@ http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
 http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
 http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
-http://www.mulesoft.org/schema/mule/powershell http://www.mulesoft.org/schema/mule/powershell/current/mule-powershell.xsd">
+http://www.mulesoft.org/schema/mule/powershell http://www.mulesoft.org/schema/mule/powershell/current/mule-powershell.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd
+http://www.mulesoft.org/schema/mule/dropbox http://www.mulesoft.org/schema/mule/dropbox/current/mule-dropbox.xsd">
+	<http:request-config name="HTTPS_Request_configuration" doc:name="HTTP Request configuration" doc:id="ed738b5d-cc19-4bd4-8999-d0b157bb6451" >
+		<http:request-connection protocol="HTTPS" host="restcountries.eu/rest/v2/" >
+			<tls:context >
+				<tls:trust-store path="keystore/keystore.jks" password="128125" type="jks" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="2cdbd29d-3bbe-47f9-9de4-62385cbd0f63" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:caching-strategy >
+				<jms:no-caching />
+			</jms:caching-strategy>
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="788911d4-6722-4bdb-8924-76aa0f48fdc7" >
+		<file:connection workingDir="D:/file/moved" />
+	</file:config>
+	<http:request-config
+		name="HTTP_Request_configuration_Bitly"
+		doc:name="HTTP Request configuration"
+		doc:id="20895b67-1139-467d-b91b-7aeb80275284">
+		<http:request-connection protocol="HTTPS"
+			host="api-ssl.bitly.com" />
+	</http:request-config>
 	<http:listener-config name="HTTP_Listener_config:8081"
 		doc:name="HTTP Listener config" doc:id="fe563ad8-d9f7-4544-b4bd-239b4a36dbc7">
 		<http:listener-connection host="0.0.0.0"
@@ -114,5 +145,11 @@ http://www.mulesoft.org/schema/mule/powershell http://www.mulesoft.org/schema/mu
 			<amqp:fallback-addresses />
 		</amqp:connection>
 	</amqp:config>
-
+	<sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="1988b5fc-6958-41ca-a221-dd6e23e0a209" >
+		<sftp:connection host="localhost" username="tester" password="password" />
+	</sftp:config>
+	<dropbox:config name="Dropbox_User_Configuration" doc:name="Dropbox User Configuration" doc:id="c610ce79-f334-471a-944e-e7a12ad0cda1" >
+		<dropbox:connection accessToken="tLJVCZD3pSYAAAAAAAAAAczyO0syzmFVkmV_KNrEvvWye89Mt-1atORFhB0KtEmV" appName="muleDemoApp" />
+	</dropbox:config>
+	
 </mule>

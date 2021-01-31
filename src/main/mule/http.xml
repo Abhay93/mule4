@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
-	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<import file="choice.xml" />
 	<flow name="toFlow" doc:id="b1a5b2d9-6946-452d-b689-27ddef7bd8f3">
 		<http:listener doc:name="Listener"
@@ -34,7 +35,7 @@ http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mul
 		<choice doc:name="Choice" doc:id="3273c7c9-2d78-43d0-9b67-a71ff362932f">
 			<when expression="#[attributes.queryParams.'name' == &quot;Abhay&quot;]">
 				<logger level="INFO" doc:name="Logger"
-					doc:id="f3d1a1af-837f-4cc8-9df3-56949ee199e5" message="${secure::version}" />
+					doc:id="f3d1a1af-837f-4cc8-9df3-56949ee199e5" message="${secure::version-secure}" />
 			</when>
 			<otherwise>
 				<set-payload value='#[{"name":"Abhay" }]' doc:name="Set Payload"
@@ -69,6 +70,30 @@ http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mul
 		<logger level="INFO" doc:name="Logger"
 			doc:id="1c38a1e6-fcb8-47f0-a4aa-37ef4b01d002" message="ASD" />
 	</flow>
+	<flow name="dwtry">
+	<http:listener doc:name="Listener" doc:id="79617d12-d17c-4fef-9ccc-b3241de74630" config-ref="HTTP_Listener_config:8081" path="/dwt"/>
+		<set-variable value='#[output application/json 
+---
+{
+  "flag": "X",
+  "endorsements" : "TMK"
+}]' doc:name="Set Variable" doc:id="a941b210-2fa9-4a08-b227-4afcfcf52e7e" variableName="in"/>
+		<ee:transform doc:name="Transform Message" doc:id="ca46dd7f-63c4-41ce-9aa5-53f98b4fe66e">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    flag: vars.in.flag,
+    endorsements: (vars.in.endorsements splitBy ("")) map (code, index) -> {
+        code: code,
+        desc: p('endorsements.' ++ code)
+    }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0c7c9bb9-f0c4-42d7-899e-4bbc4fa6c006" message='#[payload]'/>
+		</flow>
 	<flow name="toFlow1" doc:id="2e336690-d5c6-4497-95dc-a0f1bdf4a0de">
 		<http:listener doc:name="Listener"
 			doc:id="75b3803c-c367-47a6-a4d5-a857c8f88d79" config-ref="HTTP_Listener_config:8082"
